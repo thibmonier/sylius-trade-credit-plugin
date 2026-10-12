@@ -44,8 +44,9 @@ final class TradeCreditWorkflowListener
         $paymentMethod = $payment?->getMethod();
         if (null !== $paymentMethod && $this->policyProvider->isOnAccount($paymentMethod)) {
             // The reservation references the order: an order completed before it was ever saved
-            // (built in code) is saved first.
-            if (null === $order->getId()) {
+            // (built in code) is saved first. Its id alone does not tell: with sequences
+            // (PostgreSQL) a persisted order has an id before its row is inserted.
+            if (null === $order->getId() || $this->entityManager->getUnitOfWork()->isScheduledForInsert($order)) {
                 $this->entityManager->persist($order);
                 $this->entityManager->flush();
             }

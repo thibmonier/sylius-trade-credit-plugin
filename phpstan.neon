@@ -18,3 +18,8 @@ parameters:
         - '/Parameter #1 \$configuration of method Symfony\\Component\\DependencyInjection\\Extension\\Extension::processConfiguration\(\) expects Symfony\\Component\\Config\\Definition\\ConfigurationInterface, Symfony\\Component\\Config\\Definition\\ConfigurationInterface\|null given\./'
         -
             identifier: missingType.iterableValue
+        # Workflow events are generic since Symfony 8.1 only; the listener supports 6.4 to 8.
+        -
+            identifier: missingType.generics
+            paths:
+                - src/EventListener/TradeCreditWorkflowListener.php

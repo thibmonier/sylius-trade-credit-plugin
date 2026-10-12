@@ -67,7 +67,10 @@ final class PaymentMethodSwitchListener
                 $entity instanceof PaymentInterface &&
                 $method instanceof PaymentMethodInterface &&
                 $order instanceof OrderInterface &&
+                // An order inserted by this flush (id already set with PostgreSQL sequences) has no
+                // row yet: it is reserved by the checkout completion, not here.
                 null !== $order->getId() &&
+                !$unitOfWork->isScheduledForInsert($order) &&
                 $this->isPendingPaymentOfPlacedOrder($entity) &&
                 $this->policyProvider->isOnAccount($method)
             ) {

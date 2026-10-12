@@ -96,7 +96,7 @@ final class TradeCreditReserver
         if (null === $policy) {
             return;
         }
-        if (null === $order->getId()) {
+        if (null === $order->getId() || $this->entityManager->getUnitOfWork()->isScheduledForInsert($order)) {
             throw new \LogicException('An order must be saved before its trade credit is reserved.');
         }
         // Never for a guest checkout typing the e-mail of a customer with an account.
