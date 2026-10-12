@@ -28,6 +28,11 @@
 
 - `TradeCreditStatementView` (shop API) has three new fields: `externalCommittedAmount`,
   `ageing`, `openItems[].daysPastDue`.
+- `OrderPaymentTermsRepositoryInterface` has new methods (`findRemindable()`,
+  `findLastForOrder()`, `sumAgeingByCurrency()`): a custom repository implementing the
+  interface must add them (extending `OrderPaymentTermsRepository` is enough).
+- `OpenItemSettler::settle()` locks and re-reads the payment and flushes in its own transaction:
+  concurrent settlements (Mark as paid, import) complete a payment once.
 - `Statement` has `position` (`CreditPosition`) and `ageing`; `StatementBuilder`,
   `TradeCreditReserver`, `TradeCreditEligibilityChecker` and `MarkAsPaidController` have new
   constructor arguments (services are wired by the plugin).

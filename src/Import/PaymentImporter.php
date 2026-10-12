@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusTradeCreditPlugin\Import;
 
-use Doctrine\DBAL\LockMode;
 use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\OrderPaymentStates;
@@ -65,11 +64,7 @@ final class PaymentImporter
 
         $this->entityManager->wrapInTransaction(function () use ($toSettle): void {
             foreach ($toSettle as $orderNumber => $terms) {
-                // Locked and read again: a concurrent import (or Mark as paid) completes it once.
-                $payment = $this->settler->payableBy($terms);
-                if (null !== $payment) {
-                    $this->entityManager->refresh($payment, LockMode::PESSIMISTIC_WRITE);
-                }
+                // Locked and read again by the settler: a concurrent settlement completes it once.
                 if (!$this->settler->settle($terms)) {
                     throw new \RuntimeException(sprintf('The open item of order #%s could not be settled.', $orderNumber));
                 }

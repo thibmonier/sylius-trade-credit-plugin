@@ -241,6 +241,10 @@ shop users of the fixtures (the demo channel requires a verified account to sign
   order), no CAMT/MT940 bank statements, no accounting export. No fees or surcharges.
 - The payments import is a console command (no upload form in the admin).
 - Reminders are e-mails to the customer of the order only (no copy to the company or to staff).
+- A reminder is recorded as sent when the mailer accepts it: with an asynchronous Messenger
+  transport for e-mails, a send that fails later in the worker is not sent again by the
+  command (route `Symfony\Component\Mailer\Messenger\SendEmailMessage` synchronously, or
+  rely on the transport retries and failure queue).
 - In the shop, the reservation (its own SQL transaction) and the save of the completed order are
   two steps: if saving the order fails afterwards, the reservation left on the cart is replaced
   when the checkout is completed again, and released after an hour by

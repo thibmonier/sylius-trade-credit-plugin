@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusTradeCreditPlugin\Payment;
 
+use Doctrine\DBAL\LockMode;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
@@ -16,7 +18,8 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * Settles an open item paid by bank transfer (admin "Mark as paid", payments CSV import): the
  * core `sylius_payment` `complete` transition of the pending payment. It settles the
  * reservation and, with the Invoicing Plugin, dispatches OrderPaymentPaid like any payment.
- * The caller flushes.
+ * In one transaction, the payment row locked and read again first: concurrent settlements (Mark
+ * as paid, payments import) complete it once; the transition is flushed here.
  */
 final class OpenItemSettler
 {
@@ -24,6 +27,7 @@ final class OpenItemSettler
         private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
         private readonly StateMachineInterface $stateMachine,
         private readonly ClockInterface $clock,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -46,13 +50,27 @@ final class OpenItemSettler
 
     public function settle(OrderPaymentTermsInterface $terms): bool
     {
-        $payment = $this->payableBy($terms);
-        if (null === $payment) {
+        if (null === $this->payableBy($terms)) {
             return false;
         }
 
-        $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE);
+        return $this->entityManager->wrapInTransaction(function () use ($terms): bool {
+            // The entities may be stale (another request settled the item meanwhile).
+            $payment = $this->payableBy($terms);
+            if (null === $payment) {
+                return false;
+            }
+            $this->entityManager->refresh($payment, LockMode::PESSIMISTIC_WRITE);
+            $this->entityManager->refresh($terms);
+            $payment = $this->payableBy($terms);
+            if (null === $payment) {
+                return false;
+            }
 
-        return true;
+            $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE);
+            $this->entityManager->flush();
+
+            return true;
+        });
     }
 }

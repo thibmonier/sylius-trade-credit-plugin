@@ -286,6 +286,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.repository.order_payment_terms'),
             service('sylius_abstraction.state_machine'),
             service('clock'),
+            service('doctrine.orm.entity_manager'),
         ])
     ;
     $services->alias(OpenItemSettler::class, 'tmonier_trade_credit.settler.open_item');
