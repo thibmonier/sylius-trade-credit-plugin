@@ -28,6 +28,7 @@ use Sylius\Component\Order\Modifier\OrderItemQuantityModifierInterface;
 use Sylius\Component\Order\Modifier\OrderModifierInterface;
 use Sylius\Component\Product\Factory\ProductFactoryInterface;
 use Sylius\Resource\Factory\FactoryInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
 use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
@@ -35,7 +36,6 @@ use Tmonier\SyliusTradeCreditPlugin\Factory\TradeCreditAccountFactory;
 use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 use Tmonier\SyliusTradeCreditPlugin\Terms\EndOfMonthMode;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Tests run against the test application loaded with the (random) Sylius fixtures, each one in
@@ -361,7 +361,7 @@ trait TradeCreditTestTrait
     /** Committed amount read in SQL (the entity may be stale). */
     private function committed(TradeCreditAccountInterface $account): int
     {
-        return (int) $this->connection()->fetchOne('SELECT committed_amount FROM tmonier_trade_credit_account WHERE id = ?', [$account->getId()]);
+        return self::intOf($this->connection()->fetchOne('SELECT committed_amount FROM tmonier_trade_credit_account WHERE id = ?', [$account->getId()]));
     }
 
     /** @return list<array{type: string, amount: int}> */
@@ -380,6 +380,21 @@ trait TradeCreditTestTrait
         $states = $this->connection()->fetchFirstColumn('SELECT state FROM tmonier_trade_credit_order_terms WHERE order_id = ? ORDER BY created_at, id', [$order->getId()]);
 
         return $states;
+    }
+
+    private static function intOf(mixed $value): int
+    {
+        self::assertIsNumeric($value);
+
+        return (int) $value;
+    }
+
+    private static function idOf(object $resource): string
+    {
+        $id = method_exists($resource, 'getId') ? $resource->getId() : null;
+        self::assertTrue(is_int($id) || is_string($id));
+
+        return (string) $id;
     }
 
     private function reload(OrderInterface $order): OrderInterface

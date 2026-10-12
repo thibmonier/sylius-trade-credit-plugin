@@ -247,6 +247,7 @@ final class ReservationTest extends KernelTestCase
         self::assertNotNull($payment);
 
         $payment->setMethod($method);
+
         try {
             $this->entityManager()->flush();
             self::fail('The switch was saved.');
@@ -255,7 +256,7 @@ final class ReservationTest extends KernelTestCase
 
         self::assertTrue($this->entityManager()->isOpen());
         self::assertSame(0, $this->committed($account));
-        self::assertSame($bankTransfer->getId(), (int) $this->connection()->fetchOne('SELECT method_id FROM sylius_payment WHERE id = ?', [$payment->getId()]));
+        self::assertSame($bankTransfer->getId(), self::intOf($this->connection()->fetchOne('SELECT method_id FROM sylius_payment WHERE id = ?', [$payment->getId()])));
     }
 
     public function testTheUnpaidOrdersCommandDoesNotCancelOrdersOnAccount(): void

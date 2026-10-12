@@ -133,6 +133,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('tmonier_trade_credit.reserver'),
             service('tmonier_trade_credit.provider.payment_terms_policy'),
+            service('doctrine.orm.entity_manager'),
         ])
         ->tag('kernel.event_listener', ['event' => 'workflow.sylius_order_checkout.transition.complete', 'method' => 'onCheckoutComplete'])
         ->tag('kernel.event_listener', ['event' => 'workflow.sylius_payment.completed.complete', 'method' => 'onPaymentCompleted'])

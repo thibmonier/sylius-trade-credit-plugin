@@ -26,7 +26,6 @@ use Sylius\Resource\Factory\FactoryInterface;
 use Symfony\Component\Config\Definition\Builder\ArrayNodeDefinition;
 use Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner;
 use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
-use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Factory\TradeCreditAccountFactory;
 
 /**
@@ -96,7 +95,8 @@ final class TradeCreditFixture extends AbstractFixture
         $method = $this->paymentMethod($channels);
         $customer = $this->customer();
         $account = $this->accountFactory->createNew();
-        $account->setOwner(AccountOwner::TYPE_CUSTOMER, (string) $customer->getId());
+        $customerId = $customer->getId();
+        $account->setOwner(AccountOwner::TYPE_CUSTOMER, is_scalar($customerId) ? (string) $customerId : '');
         $account->setCurrencyCode($channel->getBaseCurrency()?->getCode());
         $account->setCreditLimit($options['credit_limit']);
         $account->setBlockWhenOverdue(false);

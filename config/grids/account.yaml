@@ -5,8 +5,6 @@ sylius_grid:
                 name: doctrine/orm
                 options:
                     class: "%tmonier_trade_credit.model.account.class%"
-            sorting:
-                id: desc
             fields:
                 owner:
                     type: twig

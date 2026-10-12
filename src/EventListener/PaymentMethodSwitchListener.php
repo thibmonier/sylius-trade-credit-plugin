@@ -40,7 +40,8 @@ final class PaymentMethodSwitchListener
             if (!isset($changeSet['method'])) {
                 continue;
             }
-            [$old, $new] = $changeSet['method'];
+            $old = $changeSet['method'][0] ?? null;
+            $new = $changeSet['method'][1] ?? null;
             $wasOnAccount = $old instanceof PaymentMethodInterface && $this->policyProvider->isOnAccount($old);
             $isOnAccount = $new instanceof PaymentMethodInterface && $this->policyProvider->isOnAccount($new);
             $order = $entity->getOrder();

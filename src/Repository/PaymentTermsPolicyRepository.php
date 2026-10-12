@@ -8,7 +8,6 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
 
-/** @extends EntityRepository<PaymentTermsPolicyInterface> */
 class PaymentTermsPolicyRepository extends EntityRepository implements PaymentTermsPolicyRepositoryInterface
 {
     public function findOneByPaymentMethod(PaymentMethodInterface $paymentMethod): ?PaymentTermsPolicyInterface

@@ -10,7 +10,6 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 
-/** @extends EntityRepository<OrderPaymentTermsInterface> */
 class OrderPaymentTermsRepository extends EntityRepository implements OrderPaymentTermsRepositoryInterface
 {
     public function findReservedForOrder(OrderInterface $order): ?OrderPaymentTermsInterface

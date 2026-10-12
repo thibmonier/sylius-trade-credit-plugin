@@ -75,8 +75,11 @@ final class TradeCreditReserver
     public function reserve(OrderInterface $order, PaymentMethodInterface $paymentMethod, bool $refreshEntities = true): void
     {
         $policy = $this->policyProvider->forPaymentMethod($paymentMethod);
-        if (null === $policy || null === $order->getId() || null !== $this->reservedTermsRow($order)) {
+        if (null === $policy || null !== $this->reservedTermsRow($order)) {
             return;
+        }
+        if (null === $order->getId()) {
+            throw new \LogicException('An order must be saved before its trade credit is reserved.');
         }
 
         $account = $this->accountProvider->forOrder($order);
@@ -106,6 +109,7 @@ final class TradeCreditReserver
             );
             if (1 !== $affected) {
                 $hold = $connection->fetchOne(sprintf('SELECT credit_hold FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]);
+
                 throw new TradeCreditReservationException(
                     (bool) $hold ? 'tmonier_trade_credit.reservation.credit_hold' : 'tmonier_trade_credit.reservation.limit_exceeded',
                     $order->getTokenValue(),
@@ -189,7 +193,7 @@ final class TradeCreditReserver
     /** Committed amount as stored (the entity may be stale within a request). */
     public function committedAmount(TradeCreditAccountInterface $account): int
     {
-        return (int) $this->connection()->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]);
+        return $this->toInt($this->connection()->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]));
     }
 
     /** Sets the committed amount of an account (recalculation command), with an adjustment entry. */
@@ -197,7 +201,7 @@ final class TradeCreditReserver
     {
         $now = $this->clock->now();
         $this->connection()->transactional(function (Connection $connection) use ($account, $committedAmount, $reason, $now): void {
-            $current = (int) $connection->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]);
+            $current = $this->toInt($connection->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]));
             $connection->executeStatement(
                 sprintf('UPDATE %s SET committed_amount = :amount, updated_at = :now WHERE id = :id', $this->table($this->accountClass)),
                 ['amount' => $committedAmount, 'now' => $now, 'id' => $account->getId()],
@@ -226,7 +230,7 @@ final class TradeCreditReserver
 
     private function addLedgerEntry(Connection $connection, mixed $accountId, mixed $orderId, ?string $termsId, string $type, int $amount, ?string $reason, \DateTimeImmutable $now): void
     {
-        $committedAfter = (int) $connection->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$accountId]);
+        $committedAfter = $this->toInt($connection->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$accountId]));
         $connection->insert($this->table($this->ledgerClass), [
             'id' => Uuid::v7()->toRfc4122(),
             'account_id' => $accountId,
@@ -246,6 +250,11 @@ final class TradeCreditReserver
         if (null !== $entity && $this->entityManager->contains($entity)) {
             $this->entityManager->refresh($entity);
         }
+    }
+
+    private function toInt(mixed $value): int
+    {
+        return is_numeric($value) ? (int) $value : 0;
     }
 
     /** @param class-string $class */

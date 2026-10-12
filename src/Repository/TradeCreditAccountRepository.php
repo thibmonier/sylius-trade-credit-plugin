@@ -7,7 +7,6 @@ namespace Tmonier\SyliusTradeCreditPlugin\Repository;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 
-/** @extends EntityRepository<TradeCreditAccountInterface> */
 class TradeCreditAccountRepository extends EntityRepository implements TradeCreditAccountRepositoryInterface
 {
     public function findOneByOwner(string $ownerType, string $ownerIdentifier): ?TradeCreditAccountInterface

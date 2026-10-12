@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusTradeCreditPlugin\FacturX;
 
-use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\InvoicingPlugin\Entity\InvoiceInterface;
 use Symfony\Contracts\Translation\TranslatorInterface;
 use Tmonier\SyliusFacturXPlugin\Entity\ChannelSettingsInterface;
@@ -30,7 +29,7 @@ final class TradeCreditInvoicePaymentTermsProvider implements InvoicePaymentTerm
     public function provide(InvoiceInterface $invoice, ChannelSettingsInterface $settings, int $duePayableAmount): ?InvoicePaymentTerms
     {
         $order = $invoice->order();
-        if (!$order instanceof OrderInterface || null === $order->getId()) {
+        if (null === $order->getId()) {
             return null;
         }
 

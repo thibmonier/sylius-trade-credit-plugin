@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\OrderHold;
 
 use Psr\Clock\ClockInterface;
+use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface as CorePaymentInterface;
 use Sylius\Component\Payment\Model\PaymentInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
-use Sylius\Bundle\MoneyBundle\Formatter\MoneyFormatterInterface;
 use Tmonier\SyliusOrderHoldPlugin\PaymentMethod\IneligibilityReason;
 use Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodEligibilityCheckerInterface;
 use Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodIneligibility;

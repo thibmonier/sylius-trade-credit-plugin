@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusTradeCreditPlugin\EventListener;
 
+use Doctrine\ORM\EntityManagerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Symfony\Component\Workflow\Event\Event;
@@ -24,10 +25,10 @@ final class TradeCreditWorkflowListener
     public function __construct(
         private readonly TradeCreditReserver $reserver,
         private readonly PaymentTermsPolicyProvider $policyProvider,
+        private readonly EntityManagerInterface $entityManager,
     ) {
     }
 
-    /** @param Event<OrderInterface> $event */
     public function onCheckoutComplete(Event $event): void
     {
         $order = $event->getSubject();
@@ -38,29 +39,31 @@ final class TradeCreditWorkflowListener
         $payment = $order->getLastPayment(PaymentInterface::STATE_CART) ?? $order->getLastPayment(PaymentInterface::STATE_NEW);
         $paymentMethod = $payment?->getMethod();
         if (null !== $paymentMethod && $this->policyProvider->isOnAccount($paymentMethod)) {
+            // The reservation references the order: an order completed before it was ever saved
+            // (built in code) is saved first.
+            if (null === $order->getId()) {
+                $this->entityManager->persist($order);
+                $this->entityManager->flush();
+            }
             $this->reserver->reserve($order, $paymentMethod);
         }
     }
 
-    /** @param Event<PaymentInterface> $event */
     public function onPaymentCompleted(Event $event): void
     {
         $this->closeForPayment($event, OrderPaymentTermsInterface::STATE_SETTLED, TradeCreditReserver::REASON_PAID);
     }
 
-    /** @param Event<PaymentInterface> $event */
     public function onPaymentFailed(Event $event): void
     {
         $this->closeForPayment($event, OrderPaymentTermsInterface::STATE_RELEASED, TradeCreditReserver::REASON_PAYMENT_FAILED);
     }
 
-    /** @param Event<PaymentInterface> $event */
     public function onPaymentCancelled(Event $event): void
     {
         $this->closeForPayment($event, OrderPaymentTermsInterface::STATE_RELEASED, TradeCreditReserver::REASON_PAYMENT_CANCELLED);
     }
 
-    /** @param Event<OrderInterface> $event */
     public function onOrderCancelled(Event $event): void
     {
         $order = $event->getSubject();
@@ -69,7 +72,6 @@ final class TradeCreditWorkflowListener
         }
     }
 
-    /** @param Event<PaymentInterface> $event */
     private function closeForPayment(Event $event, string $state, string $reason): void
     {
         $payment = $event->getSubject();

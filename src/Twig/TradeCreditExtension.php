@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Twig;
 
 use Psr\Clock\ClockInterface;
+use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner;
-use Sylius\Component\Core\Model\CustomerInterface;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;

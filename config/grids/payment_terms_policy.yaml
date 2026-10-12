@@ -5,8 +5,6 @@ sylius_grid:
                 name: doctrine/orm
                 options:
                     class: "%tmonier_trade_credit.model.payment_terms_policy.class%"
-            sorting:
-                id: asc
             fields:
                 paymentMethod:
                     type: twig

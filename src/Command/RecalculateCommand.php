@@ -43,7 +43,8 @@ final class RecalculateCommand extends Command
 
         $rows = [];
         foreach ($this->accountRepository->findAll() as $account) {
-            $expected = $reserved[(int) $account->getId()] ?? 0;
+            $accountId = $account->getId();
+            $expected = null === $accountId ? 0 : ($reserved[$accountId] ?? 0);
             $committed = $this->reserver->committedAmount($account);
             if ($expected === $committed) {
                 continue;

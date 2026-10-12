@@ -23,7 +23,11 @@ interface OrderPaymentTermsRepositoryInterface extends RepositoryInterface
 
     public function hasOverdue(TradeCreditAccountInterface $account, \DateTimeInterface $today): bool;
 
-    /** Sum of the reserved amounts, per account id. @return array<int, int> */
+    /**
+     * Sum of the reserved amounts, per account id.
+     *
+     * @return array<int, int>
+     */
     public function sumReservedByAccount(): array;
 
     /** Admin open items grid. */
