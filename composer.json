@@ -42,8 +42,8 @@
         "tmonier/sylius-facturx-plugin": "Per-order due date (BT-9) and payment terms (BT-20) in Factur-X invoices",
         "sylius/invoicing-plugin": "Invoice PDF links on the trade credit statement"
     },
-    "repositories": [
-        {
+    "repositories": {
+        "order-hold": {
             "type": "path",
             "url": "../sylius-order-hold-plugin",
             "options": {
@@ -53,7 +53,7 @@
                 }
             }
         }
-    ],
+    },
     "config": {
         "sort-packages": true,
         "allow-plugins": {
