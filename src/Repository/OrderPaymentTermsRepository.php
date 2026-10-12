@@ -9,6 +9,7 @@ use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
+use Tmonier\SyliusTradeCreditPlugin\Ageing\AgeingBuckets;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
@@ -44,6 +45,41 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
         ;
 
         return $terms instanceof OrderPaymentTermsInterface ? $terms : null;
+    }
+
+    public function findLastForOrder(OrderInterface $order): ?OrderPaymentTermsInterface
+    {
+        $terms = $this->createQueryBuilder('t')
+            ->andWhere('t.order = :order')
+            ->setParameter('order', $order)
+            // UUID v7 ids: in creation order.
+            ->addOrderBy('t.id', 'DESC')
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getOneOrNullResult()
+        ;
+
+        return $terms instanceof OrderPaymentTermsInterface ? $terms : null;
+    }
+
+    public function findRemindable(\DateTimeInterface $today, int $daysBeforeDue): array
+    {
+        /** @var list<OrderPaymentTermsInterface> $reserved */
+        $reserved = $this->createQueryBuilder('t')
+            ->addSelect('o')
+            ->innerJoin('t.order', 'o')
+            ->andWhere('t.state = :state')
+            ->andWhere('t.dueDate <= :until')
+            ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
+            ->setParameter('until', self::day($today)->modify(sprintf('+%d days', max(0, $daysBeforeDue))), 'date_immutable')
+            ->addOrderBy('t.dueDate', 'ASC')
+            ->getQuery()
+            ->getResult()
+        ;
+        /** @var list<OrderPaymentTermsInterface> $leftUnpaid */
+        $leftUnpaid = $this->createLeftUnpaidQueryBuilder($today)->addSelect('o')->addOrderBy('t.dueDate', 'ASC')->getQuery()->getResult();
+
+        return [...$reserved, ...$leftUnpaid];
     }
 
     public function findOpenByAccount(TradeCreditAccountInterface $account): array
@@ -171,6 +207,41 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
     private static function day(\DateTimeInterface $today): \DateTimeImmutable
     {
         return \DateTimeImmutable::createFromInterface($today)->setTime(0, 0);
+    }
+
+    public function sumAgeingByCurrency(\DateTimeInterface $today): array
+    {
+        $day = self::day($today);
+        $queryBuilder = $this->createQueryBuilder('t');
+        $queryBuilder
+            ->select('t.currencyCode AS currencyCode')
+            ->addSelect('SUM(CASE WHEN t.dueDate >= :ageingToday THEN t.amount ELSE 0 END) AS current')
+            ->addSelect('SUM(CASE WHEN t.dueDate < :ageingToday AND t.dueDate >= :ageing30 THEN t.amount ELSE 0 END) AS days_1_30')
+            ->addSelect('SUM(CASE WHEN t.dueDate < :ageing30 AND t.dueDate >= :ageing60 THEN t.amount ELSE 0 END) AS days_31_60')
+            ->addSelect('SUM(CASE WHEN t.dueDate < :ageing60 AND t.dueDate >= :ageing90 THEN t.amount ELSE 0 END) AS days_61_90')
+            ->addSelect('SUM(CASE WHEN t.dueDate < :ageing90 THEN t.amount ELSE 0 END) AS days_over_90')
+            ->andWhere(sprintf('t.state = :ageingReserved OR %s', $this->leftUnpaidOverdueCondition($queryBuilder, 't', $today)))
+            ->setParameter('ageingReserved', OrderPaymentTermsInterface::STATE_RESERVED)
+            ->setParameter('ageingToday', $day, 'date_immutable')
+            ->setParameter('ageing30', $day->modify('-30 days'), 'date_immutable')
+            ->setParameter('ageing60', $day->modify('-60 days'), 'date_immutable')
+            ->setParameter('ageing90', $day->modify('-90 days'), 'date_immutable')
+            ->groupBy('t.currencyCode')
+            ->orderBy('t.currencyCode')
+        ;
+
+        /** @var list<array<string, mixed>> $rows */
+        $rows = $queryBuilder->getQuery()->getArrayResult();
+        $ageing = [];
+        foreach ($rows as $row) {
+            $amounts = [];
+            foreach (AgeingBuckets::BUCKETS as $bucket) {
+                $amounts[$bucket] = is_numeric($row[$bucket] ?? null) ? (int) $row[$bucket] : 0;
+            }
+            $ageing[is_string($row['currencyCode'] ?? null) ? $row['currencyCode'] : ''] = AgeingBuckets::fromArray($amounts);
+        }
+
+        return $ageing;
     }
 
     public function createOpenItemsQueryBuilder(): QueryBuilder

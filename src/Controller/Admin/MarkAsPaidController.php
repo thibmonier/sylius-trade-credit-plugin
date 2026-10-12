@@ -5,11 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
-use Psr\Clock\ClockInterface;
-use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
-use Sylius\Component\Core\Model\PaymentInterface;
-use Sylius\Component\Payment\PaymentTransitions;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Session\FlashBagAwareSessionInterface;
@@ -17,22 +13,18 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Csrf\CsrfToken;
 use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
+use Tmonier\SyliusTradeCreditPlugin\Payment\OpenItemSettler;
 use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 
-/**
- * "Mark as paid" on an open item: the core `sylius_payment` `complete` transition of the pending
- * payment (bank transfer received). It settles the reservation and, with the Invoicing Plugin,
- * dispatches OrderPaymentPaid like any other payment.
- */
+/** "Mark as paid" on an open item (bank transfer received), see `OpenItemSettler`. */
 final class MarkAsPaidController
 {
     public function __construct(
         private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly StateMachineInterface $stateMachine,
+        private readonly OpenItemSettler $settler,
         private readonly EntityManagerInterface $entityManager,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -51,16 +43,12 @@ final class MarkAsPaidController
             return $redirect;
         }
 
-        $payment = $order->getLastPayment(PaymentInterface::STATE_NEW) ?? $order->getLastPayment(PaymentInterface::STATE_PROCESSING);
-        // An open item, or an order that left payment on account and is overdue (paid by transfer).
-        $payable = $terms->isReserved() || $this->termsRepository->isLeftUnpaidOverdue($terms, $this->clock->now());
-        if (!$payable || null === $payment || !$this->stateMachine->can($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE)) {
+        if (!$this->settler->settle($terms)) {
             $this->flash($request, 'error', 'tmonier_trade_credit.flash.cannot_mark_as_paid');
 
             return $redirect;
         }
 
-        $this->stateMachine->apply($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE);
         $this->entityManager->flush();
         $this->flash($request, 'success', 'tmonier_trade_credit.flash.marked_as_paid');
 

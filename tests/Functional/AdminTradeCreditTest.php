@@ -84,6 +84,13 @@ final class AdminTradeCreditTest extends WebTestCase
         self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-mark-as-paid="%s"]', (string) $open->getNumber())));
         self::assertCount(1, $crawler->filter(sprintf('[data-test-tmonier-mark-as-paid="%s"]', (string) $overdue->getNumber())));
 
+        // Ageing of every account above the grid, and on the customer card.
+        self::assertCount(1, $crawler->filter('[data-test-tmonier-ageing-summary]'));
+        self::assertStringContainsString('1-30 days', $crawler->filter('[data-test-tmonier-ageing-summary]')->text());
+        $card = $this->client->request('GET', sprintf('/admin/customers/%s', self::idOf($customer)));
+        self::assertCount(1, $card->filter('[data-test-tmonier-trade-credit-card] [data-test-tmonier-ageing]'));
+        self::assertStringNotContainsString('$0.00', $card->filter('[data-test-tmonier-trade-credit-card] [data-test-tmonier-ageing-bucket="days_1_30"]')->text());
+
         $crawler = $this->client->request('GET', '/admin/trade-credit/open-items?criteria[overdue]=true');
         self::assertResponseIsSuccessful();
         self::assertCount(0, $crawler->filter(sprintf('[data-test-tmonier-mark-as-paid="%s"]', (string) $open->getNumber())));

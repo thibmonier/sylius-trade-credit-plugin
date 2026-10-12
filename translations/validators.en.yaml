@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'Payment on account is suspended while invoices are overdue.'
         credit_hold: 'Payment on account is suspended for your account.'
         limit_exceeded: 'The order total exceeds your available credit: choose another payment method.'
+        unavailable: 'Payment on account is temporarily unavailable: choose another payment method or try again later.'
     account:
         unique: 'This owner already has a trade credit account.'
     payment_terms_policy:

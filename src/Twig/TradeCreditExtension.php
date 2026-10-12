@@ -12,6 +12,8 @@ use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Symfony\Contracts\Service\ResetInterface;
 use Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
+use Tmonier\SyliusTradeCreditPlugin\Ageing\AgeingBuckets;
+use Tmonier\SyliusTradeCreditPlugin\Credit\CreditPositionResolver;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
@@ -36,6 +38,7 @@ final class TradeCreditExtension extends AbstractExtension implements ResetInter
         private readonly ClockInterface $clock,
         private readonly RepositoryInterface $customerRepository,
         private readonly PaymentTermsPolicyRepositoryInterface $policyRepository,
+        private readonly CreditPositionResolver $positionResolver,
     ) {
     }
 
@@ -47,7 +50,25 @@ final class TradeCreditExtension extends AbstractExtension implements ResetInter
             new TwigFunction('tmonier_trade_credit_is_overdue', $this->isOverdue(...)),
             new TwigFunction('tmonier_trade_credit_legal_warning', $this->legalWarning(...)),
             new TwigFunction('tmonier_trade_credit_owner_customer', $this->ownerCustomer(...)),
+            new TwigFunction('tmonier_trade_credit_position', $this->positionResolver->resolveForDisplay(...)),
+            new TwigFunction('tmonier_trade_credit_ageing', $this->ageing(...)),
+            new TwigFunction('tmonier_trade_credit_ageing_by_currency', $this->ageingByCurrency(...)),
         ];
+    }
+
+    /** Ageing of the open items of an account (with the left unpaid overdue items). */
+    public function ageing(TradeCreditAccountInterface $account): AgeingBuckets
+    {
+        return AgeingBuckets::fromItems(
+            array_map(static fn (OrderPaymentTermsInterface $terms): array => ['amount' => $terms->getAmount(), 'dueDate' => $terms->getDueDate()], $this->openItems($account)),
+            $this->clock->now(),
+        );
+    }
+
+    /** @return array<string, AgeingBuckets> ageing of every account, per currency */
+    public function ageingByCurrency(): array
+    {
+        return $this->termsRepository->sumAgeingByCurrency($this->clock->now());
     }
 
     /** The customer of an account owned by a customer (default owner model). */

@@ -11,9 +11,14 @@ use Tmonier\SyliusTradeCreditPlugin\Account\OrderOwnerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
 use Tmonier\SyliusTradeCreditPlugin\Api\TradeCreditStatementProvider;
+use Tmonier\SyliusTradeCreditPlugin\Command\ImportPaymentsCommand;
 use Tmonier\SyliusTradeCreditPlugin\Command\RecalculateCommand;
+use Tmonier\SyliusTradeCreditPlugin\Command\SendRemindersCommand;
 use Tmonier\SyliusTradeCreditPlugin\Controller\Admin\MarkAsPaidController;
 use Tmonier\SyliusTradeCreditPlugin\Controller\Shop\StatementController;
+use Tmonier\SyliusTradeCreditPlugin\Credit\CreditPositionResolver;
+use Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditProviderInterface;
+use Tmonier\SyliusTradeCreditPlugin\Credit\InternalCreditProvider;
 use Tmonier\SyliusTradeCreditPlugin\EventListener\PaymentMethodSwitchListener;
 use Tmonier\SyliusTradeCreditPlugin\EventListener\PaymentTermsPolicyGuardListener;
 use Tmonier\SyliusTradeCreditPlugin\EventListener\ReservationExceptionListener;
@@ -23,10 +28,14 @@ use Tmonier\SyliusTradeCreditPlugin\Fixture\TradeCreditFixture;
 use Tmonier\SyliusTradeCreditPlugin\Form\Type\PaymentTermsPolicyType;
 use Tmonier\SyliusTradeCreditPlugin\Form\Type\TradeCreditAccountType;
 use Tmonier\SyliusTradeCreditPlugin\Grid\Filter\OverdueFilter;
+use Tmonier\SyliusTradeCreditPlugin\Import\PaymentCsvReader;
+use Tmonier\SyliusTradeCreditPlugin\Import\PaymentImporter;
 use Tmonier\SyliusTradeCreditPlugin\Grid\Filter\TermsStateFilter;
 use Tmonier\SyliusTradeCreditPlugin\Menu\AccountMenuListener;
 use Tmonier\SyliusTradeCreditPlugin\Menu\AdminMenuListener;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\LostReservationCancellationExclusion;
+use Tmonier\SyliusTradeCreditPlugin\Payment\OpenItemSettler;
+use Tmonier\SyliusTradeCreditPlugin\Reminder\ReminderSender;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\OnAccountPaymentEntryBlocker;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\ReservedOrdersQueryExtension;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\TradeCreditEligibilityChecker;
@@ -87,6 +96,21 @@ return static function (ContainerConfigurator $container): void {
         ])
     ;
 
+    // Credit position: Sylius figures, or those of an external system (ERP) when the interface
+    // is aliased to another provider.
+    $services->set('tmonier_trade_credit.external_credit_provider.internal', InternalCreditProvider::class);
+    $services->alias(ExternalCreditProviderInterface::class, 'tmonier_trade_credit.external_credit_provider.internal');
+
+    $services
+        ->set('tmonier_trade_credit.resolver.credit_position', CreditPositionResolver::class)
+        ->args([
+            service(ExternalCreditProviderInterface::class),
+            service('logger'),
+        ])
+        ->tag('monolog.logger', ['channel' => 'tmonier_trade_credit'])
+    ;
+    $services->alias(CreditPositionResolver::class, 'tmonier_trade_credit.resolver.credit_position');
+
     $services
         ->set('tmonier_trade_credit.reserver', TradeCreditReserver::class)
         ->args([
@@ -95,6 +119,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.provider.payment_terms_policy'),
             service('tmonier_trade_credit.repository.order_payment_terms'),
             service('tmonier_trade_credit.checker.order_owner'),
+            service('tmonier_trade_credit.resolver.credit_position'),
             service('clock'),
             service('logger'),
             param('tmonier_trade_credit.model.account.class'),
@@ -117,6 +142,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.repository.order_payment_terms'),
             service('sylius.formatter.money'),
             service('clock'),
+            service('tmonier_trade_credit.resolver.credit_position'),
         ])
         ->tag('tmonier_order_hold.payment_method_eligibility_checker')
     ;
@@ -200,6 +226,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.repository.order_payment_terms'),
             service('clock'),
             service('router'),
+            service('tmonier_trade_credit.resolver.credit_position'),
             service('sylius_invoicing.repository.invoice')->nullOnInvalid(),
         ])
     ;
@@ -221,6 +248,7 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('tmonier_trade_credit.statement_builder'),
             service('security.helper'),
+            service('clock'),
         ])
         ->tag('api_platform.state_provider')
     ;
@@ -253,14 +281,23 @@ return static function (ContainerConfigurator $container): void {
     ;
 
     $services
-        ->set('tmonier_trade_credit.controller.admin.mark_as_paid', MarkAsPaidController::class)
+        ->set('tmonier_trade_credit.settler.open_item', OpenItemSettler::class)
         ->args([
             service('tmonier_trade_credit.repository.order_payment_terms'),
             service('sylius_abstraction.state_machine'),
+            service('clock'),
+        ])
+    ;
+    $services->alias(OpenItemSettler::class, 'tmonier_trade_credit.settler.open_item');
+
+    $services
+        ->set('tmonier_trade_credit.controller.admin.mark_as_paid', MarkAsPaidController::class)
+        ->args([
+            service('tmonier_trade_credit.repository.order_payment_terms'),
+            service('tmonier_trade_credit.settler.open_item'),
             service('doctrine.orm.entity_manager'),
             service('security.csrf.token_manager'),
             service('router'),
-            service('clock'),
         ])
         ->public()
         ->tag('controller.service_arguments')
@@ -292,9 +329,51 @@ return static function (ContainerConfigurator $container): void {
             service('clock'),
             service('sylius.repository.customer'),
             service('tmonier_trade_credit.repository.payment_terms_policy'),
+            service('tmonier_trade_credit.resolver.credit_position'),
         ])
         ->tag('twig.extension')
         ->tag('kernel.reset', ['method' => 'reset'])
+    ;
+
+    $services->set('tmonier_trade_credit.import.payment_csv_reader', PaymentCsvReader::class);
+
+    $services
+        ->set('tmonier_trade_credit.import.payment_importer', PaymentImporter::class)
+        ->args([
+            service('sylius.repository.order'),
+            service('tmonier_trade_credit.repository.order_payment_terms'),
+            service('tmonier_trade_credit.settler.open_item'),
+            service('doctrine.orm.entity_manager'),
+        ])
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.command.import_payments', ImportPaymentsCommand::class)
+        ->args([
+            service('tmonier_trade_credit.import.payment_csv_reader'),
+            service('tmonier_trade_credit.import.payment_importer'),
+        ])
+        ->tag('console.command')
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.reminder_sender', ReminderSender::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            service('tmonier_trade_credit.repository.order_payment_terms'),
+            service('sylius.email_sender'),
+            service('router'),
+            service('clock'),
+            service('logger'),
+            param('tmonier_trade_credit.reminders.levels'),
+        ])
+        ->tag('monolog.logger', ['channel' => 'tmonier_trade_credit'])
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.command.send_reminders', SendRemindersCommand::class)
+        ->args([service('tmonier_trade_credit.reminder_sender')])
+        ->tag('console.command')
     ;
 
     $services

@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'Il pagamento a credito è sospeso finché ci sono fatture scadute.'
         credit_hold: 'Il pagamento a credito è sospeso per il suo conto.'
         limit_exceeded: 'Il totale dell''ordine supera il credito disponibile: scelga un altro metodo di pagamento.'
+        unavailable: 'Il pagamento a credito è temporaneamente non disponibile: scelga un altro metodo di pagamento o riprovi più tardi.'
     account:
         unique: 'Questo titolare ha già un conto di credito.'
     payment_terms_policy:

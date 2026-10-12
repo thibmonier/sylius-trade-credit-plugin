@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'Deze voorwaarden overschrijden %net_days% dagen, de grens ingesteld voor kanaal %channel% (sectorgrenzen, L441-11). Controleer de geldende regels.'
             net: 'Deze voorwaarden overschrijden %net_days% dagen na factuurdatum, het gebruikelijke wettelijke maximum tussen bedrijven in Frankrijk (L441-10). Controleer de geldende regels.'
             end_of_month: 'Deze voorwaarden overschrijden %end_of_month_days% dagen einde maand, het gebruikelijke wettelijke maximum tussen bedrijven in Frankrijk (L441-10). Controleer de geldende regels.'
+        ageing: 'Ouderdomsanalyse'
+        external_committed: 'Verschuldigd buiten de winkel'
     form:
         credit_limit: 'Kredietlimiet'
         credit_hold: 'Krediet blokkeren'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Betaling op rekening: einde maand + %days% dagen, te betalen op %due_date%.'
         late_payment_penalties: 'Boete bij te late betaling: driemaal de wettelijke rente.'
         recovery_indemnity: 'Vaste vergoeding voor invorderingskosten bij te late betaling: 40 EUR.'
+    ageing:
+        current: 'Niet vervallen'
+        days_1_30: '1-30 dagen'
+        days_31_60: '31-60 dagen'
+        days_61_90: '61-90 dagen'
+        days_over_90: 'Meer dan 90 dagen'
+    email:
+        reminder:
+            subject_before_due: 'Bestelling #%number%: betaling vervalt op %due_date%'
+            subject_overdue: 'Bestelling #%number%: betaling vervallen sinds %due_date%'
+            intro_before_due: 'Uw op rekening betaalde bestelling #%number% (%amount%) vervalt op %due_date%, over %days% dagen.'
+            intro_due_today: 'Uw op rekening betaalde bestelling #%number% (%amount%) vervalt vandaag, %due_date%.'
+            intro_overdue: 'Uw op rekening betaalde bestelling #%number% (%amount%) verviel op %due_date%: de betaling is %days% dagen te laat.'
+            pay_by_transfer: 'Gelieve per overschrijving te betalen met vermelding van bestelnummer %number%.'
+            open_statement: 'Mijn rekeningoverzicht bekijken'
+            already_paid: 'Hebt u deze bestelling al betaald, dan kunt u dit bericht negeren.'

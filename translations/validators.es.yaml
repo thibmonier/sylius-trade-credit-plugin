@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'El pago a crédito está suspendido mientras haya facturas vencidas.'
         credit_hold: 'El pago a crédito está suspendido para su cuenta.'
         limit_exceeded: 'El total del pedido supera su crédito disponible: elija otro método de pago.'
+        unavailable: 'El pago a crédito no está disponible temporalmente: elija otro método de pago o vuelva a intentarlo más tarde.'
     account:
         unique: 'Este titular ya tiene una cuenta de crédito.'
     payment_terms_policy:

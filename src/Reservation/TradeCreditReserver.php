@@ -18,6 +18,8 @@ use Symfony\Component\Uid\Uuid;
 use Tmonier\SyliusTradeCreditPlugin\Account\OrderOwnerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
+use Tmonier\SyliusTradeCreditPlugin\Credit\CreditPositionResolver;
+use Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditUnavailableException;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditLedgerEntryInterface;
@@ -60,6 +62,9 @@ final class TradeCreditReserver
     public const REASON_STALE = 'stale';
 
     /** Reasons after which the order stays unpaid without reservation (see the unpaid-orders exclusion). */
+    /** Translation key of a refusal because the external credit position is unknown. */
+    public const UNAVAILABLE = 'tmonier_trade_credit.reservation.unavailable';
+
     public const LOST_RESERVATION_REASONS = [self::REASON_PAYMENT_CANCELLED, self::REASON_PAYMENT_FAILED, self::REASON_PAYMENT_METHOD_CHANGED];
 
     /**
@@ -73,6 +78,7 @@ final class TradeCreditReserver
         private readonly PaymentTermsPolicyProvider $policyProvider,
         private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
         private readonly OrderOwnerChecker $orderOwnerChecker,
+        private readonly CreditPositionResolver $positionResolver,
         private readonly ClockInterface $clock,
         private readonly LoggerInterface $logger,
         private readonly string $accountClass,
@@ -116,11 +122,27 @@ final class TradeCreditReserver
             throw new TradeCreditReservationException('tmonier_trade_credit.reservation.overdue', $order->getTokenValue());
         }
 
+        // External position (ERP): its limit replaces the account limit and what is owed outside
+        // the shop reduces the available credit. Unknown position: refused (fail closed).
+        $limitSql = 'credit_limit';
+        $externalCommitted = 0;
+        if (!$account->isAllowExceed()) {
+            try {
+                $position = $this->positionResolver->resolve($account);
+            } catch (ExternalCreditUnavailableException) {
+                throw new TradeCreditReservationException(self::UNAVAILABLE, $order->getTokenValue());
+            }
+            if ($position->externalLimit) {
+                $limitSql = (string) $position->creditLimit;
+            }
+            $externalCommitted = $position->externalCommittedAmount;
+        }
+
         $amount = $order->getTotal();
         $placed = OrderCheckoutStates::STATE_COMPLETED === $order->getCheckoutState();
         $accountTerms = $account->getTerms($policy->getTerms());
 
-        $this->connection()->transactional(function (Connection $connection) use ($order, $paymentMethod, $account, $amount, $placed, $accountTerms, $now): void {
+        $this->connection()->transactional(function (Connection $connection) use ($order, $paymentMethod, $account, $amount, $placed, $accountTerms, $now, $limitSql, $externalCommitted): void {
             $this->lockAccount($connection, $account->getId());
 
             $existing = $this->reservedRow($connection, $order->getId(), true);
@@ -135,11 +157,12 @@ final class TradeCreditReserver
 
             $affected = $connection->executeStatement(
                 sprintf(
-                    'UPDATE %s SET committed_amount = committed_amount + :amount, updated_at = :now WHERE id = :id AND enabled = :yes AND credit_hold = :no AND (allow_exceed = :yes OR credit_limit - committed_amount >= :amount)',
+                    'UPDATE %s SET committed_amount = committed_amount + :amount, updated_at = :now WHERE id = :id AND enabled = :yes AND credit_hold = :no AND (allow_exceed = :yes OR %s - committed_amount - :external >= :amount)',
                     $this->table($this->accountClass),
+                    $limitSql,
                 ),
-                ['amount' => $amount, 'now' => $now, 'id' => $account->getId(), 'yes' => true, 'no' => false],
-                ['amount' => ParameterType::INTEGER, 'now' => Types::DATETIME_IMMUTABLE, 'id' => ParameterType::INTEGER, 'yes' => ParameterType::BOOLEAN, 'no' => ParameterType::BOOLEAN],
+                ['amount' => $amount, 'now' => $now, 'id' => $account->getId(), 'yes' => true, 'no' => false, 'external' => $externalCommitted],
+                ['amount' => ParameterType::INTEGER, 'now' => Types::DATETIME_IMMUTABLE, 'id' => ParameterType::INTEGER, 'yes' => ParameterType::BOOLEAN, 'no' => ParameterType::BOOLEAN, 'external' => ParameterType::INTEGER],
             );
             if (1 !== $affected) {
                 $hold = $connection->fetchOne(sprintf('SELECT credit_hold FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]);
@@ -339,6 +362,10 @@ final class TradeCreditReserver
                     continue;
                 } catch (TradeCreditReservationException $exception) {
                     $this->logger->warning(sprintf('Trade credit of order #%s cannot be reserved for its payment method: %s', (string) $order->getNumber(), $exception->getMessage()));
+                    if (self::UNAVAILABLE === $exception->getTranslationKey()) {
+                        // External position unknown: left as is until the next run.
+                        continue;
+                    }
                 }
             }
             $this->close($order, OrderPaymentTermsInterface::STATE_RELEASED, self::REASON_PAYMENT_METHOD_CHANGED);

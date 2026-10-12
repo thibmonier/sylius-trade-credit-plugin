@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'Betalen op rekening is opgeschort zolang er facturen vervallen zijn.'
         credit_hold: 'Betalen op rekening is opgeschort voor uw account.'
         limit_exceeded: 'Het besteltotaal overschrijdt uw beschikbare krediet: kies een andere betaalmethode.'
+        unavailable: 'Betalen op rekening is tijdelijk niet beschikbaar: kies een andere betaalmethode of probeer het later opnieuw.'
     account:
         unique: 'Deze houder heeft al een handelskredietrekening.'
     payment_terms_policy:

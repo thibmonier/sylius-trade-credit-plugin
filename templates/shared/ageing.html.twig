@@ -1,0 +1,21 @@
+{# Ageing table: `ageing` (AgeingBuckets), `currency`, optional `label`. #}
+<table class="table table-sm mb-0 text-end" {{ sylius_test_html_attribute('tmonier-ageing', currency) }}>
+    <thead>
+        <tr>
+            {% if label is defined and label %}<th class="text-start"></th>{% endif %}
+            {% for bucket, amount in ageing.toArray() %}
+                <th class="{{ bucket != 'current' and amount > 0 ? 'text-danger' }}">{{ ('tmonier_trade_credit.ageing.' ~ bucket)|trans }}</th>
+            {% endfor %}
+            <th>{{ 'sylius.ui.total'|trans }}</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            {% if label is defined and label %}<th class="text-start">{{ label }}</th>{% endif %}
+            {% for bucket, amount in ageing.toArray() %}
+                <td {{ sylius_test_html_attribute('tmonier-ageing-bucket', bucket) }}>{{ amount|sylius_format_money(currency, app.request.locale) }}</td>
+            {% endfor %}
+            <td class="fw-semibold">{{ ageing.total|sylius_format_money(currency, app.request.locale) }}</td>
+        </tr>
+    </tbody>
+</table>

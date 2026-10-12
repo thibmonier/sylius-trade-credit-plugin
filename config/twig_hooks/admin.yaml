@@ -1,5 +1,11 @@
 sylius_twig_hooks:
     hooks:
+        # Open items page: ageing of every account, between the header and the grid.
+        'tmonier_trade_credit_admin.open_item.index.content':
+            ageing:
+                template: '@TmonierSyliusTradeCreditPlugin/admin/open_item/ageing.html.twig'
+                priority: 150
+
         # Trade credit card on the customer page.
         'sylius_admin.customer.show.content.sections':
             tmonier_trade_credit:

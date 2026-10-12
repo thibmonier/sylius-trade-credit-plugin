@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'Le paiement à terme est suspendu tant que des factures sont échues.'
         credit_hold: 'Le paiement à terme est suspendu pour votre compte.'
         limit_exceeded: 'Le total de la commande dépasse votre encours disponible : choisissez un autre moyen de paiement.'
+        unavailable: 'Le paiement à terme est momentanément indisponible : choisissez un autre moyen de paiement ou réessayez plus tard.'
     account:
         unique: 'Ce titulaire a déjà un compte de paiement à terme.'
     payment_terms_policy:

@@ -4,15 +4,22 @@ declare(strict_types=1);
 
 namespace Tmonier\SyliusTradeCreditPlugin\Statement;
 
+use Tmonier\SyliusTradeCreditPlugin\Ageing\AgeingBuckets;
+use Tmonier\SyliusTradeCreditPlugin\Credit\CreditPosition;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 
 final class Statement
 {
+    public readonly AgeingBuckets $ageing;
+
     /** @param list<StatementItem> $items */
     public function __construct(
         public readonly TradeCreditAccountInterface $account,
         public readonly array $items,
+        public readonly CreditPosition $position,
+        \DateTimeInterface $today,
     ) {
+        $this->ageing = AgeingBuckets::fromItems(array_map(static fn (StatementItem $item): array => ['amount' => $item->amount, 'dueDate' => $item->dueDate], $items), $today);
     }
 
     public function getOverdueAmount(): int

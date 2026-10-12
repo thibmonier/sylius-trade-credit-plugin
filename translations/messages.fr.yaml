@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'Ces conditions dépassent %net_days% jours, la limite configurée pour le canal %channel% (plafonds sectoriels, L441-11). Vérifiez les règles applicables.'
             net: 'Ces conditions dépassent %net_days% jours à compter de la date de facture, le maximum légal usuel entre professionnels (L441-10). Vérifiez les règles applicables.'
             end_of_month: 'Ces conditions dépassent %end_of_month_days% jours fin de mois, le maximum légal usuel entre professionnels (L441-10). Vérifiez les règles applicables.'
+        ageing: 'Balance âgée'
+        external_committed: 'Dû hors boutique'
     form:
         credit_limit: 'Plafond d''encours'
         credit_hold: 'Bloquer le compte'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Paiement à terme : fin de mois + %days% jours, échéance le %due_date%.'
         late_payment_penalties: 'Pénalités de retard : trois fois le taux d''intérêt légal.'
         recovery_indemnity: 'Indemnité forfaitaire pour frais de recouvrement en cas de retard : 40 EUR.'
+    ageing:
+        current: 'Non échu'
+        days_1_30: '1 à 30 jours'
+        days_31_60: '31 à 60 jours'
+        days_61_90: '61 à 90 jours'
+        days_over_90: 'Plus de 90 jours'
+    email:
+        reminder:
+            subject_before_due: 'Commande n° %number% : paiement dû le %due_date%'
+            subject_overdue: 'Commande n° %number% : paiement échu depuis le %due_date%'
+            intro_before_due: 'Votre commande n° %number% payée à terme (%amount%) arrive à échéance le %due_date%, dans %days% jours.'
+            intro_due_today: 'Votre commande n° %number% payée à terme (%amount%) arrive à échéance aujourd''hui, le %due_date%.'
+            intro_overdue: 'Votre commande n° %number% payée à terme (%amount%) était due le %due_date% : elle est échue depuis %days% jours.'
+            pay_by_transfer: 'Merci de la régler par virement en indiquant le numéro de commande %number%.'
+            open_statement: 'Voir mon relevé de paiement à terme'
+            already_paid: 'Si vous avez déjà réglé cette commande, merci de ne pas tenir compte de ce message.'

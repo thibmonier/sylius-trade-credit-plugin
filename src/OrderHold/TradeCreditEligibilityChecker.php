@@ -18,6 +18,8 @@ use Tmonier\SyliusTradeCreditPlugin\Account\BusinessCustomerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\OrderOwnerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
+use Tmonier\SyliusTradeCreditPlugin\Credit\CreditPositionResolver;
+use Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditUnavailableException;
 use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 
 /**
@@ -25,7 +27,8 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * refuses the method) only to orders placed by their signed-in customer (never a guest checkout)
  * whose owner has an enabled trade credit account in the order currency, billed to a company,
  * not on hold, without overdue items (when the account blocks them) and with enough available
- * credit (unless exceeding is allowed). Registered through order-hold, so it applies to the
+ * credit (unless exceeding is allowed; with an external credit provider, its limit and the amount
+ * owed outside the shop count). Registered through order-hold, so it applies to the
  * shop and API method lists, the default method, method changes and checkout completion.
  */
 final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityCheckerInterface
@@ -38,6 +41,7 @@ final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityChe
         private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
         private readonly MoneyFormatterInterface $moneyFormatter,
         private readonly ClockInterface $clock,
+        private readonly CreditPositionResolver $positionResolver,
     ) {
     }
 
@@ -82,10 +86,21 @@ final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityChe
             return new PaymentMethodIneligibility(IneligibilityReason::Overdue, 'tmonier_trade_credit.payment_method.overdue');
         }
 
+        if ($account->isAllowExceed()) {
+            return null;
+        }
+
+        try {
+            $position = $this->positionResolver->resolve($account);
+        } catch (ExternalCreditUnavailableException) {
+            // External position (ERP) unknown: fail closed.
+            return new PaymentMethodIneligibility(IneligibilityReason::Restricted, 'tmonier_trade_credit.payment_method.unavailable');
+        }
+
         // An open reservation of this order (other method, cart left by a failed save) is
         // replaced by the new one: its amount is available again.
-        $available = $account->getAvailableAmount() + ($reserved?->getAmount() ?? 0);
-        if (!$account->isAllowExceed() && $available < $order->getTotal()) {
+        $available = $position->getAvailableAmount() + ($reserved?->getAmount() ?? 0);
+        if ($available < $order->getTotal()) {
             return new PaymentMethodIneligibility(IneligibilityReason::CreditLimitExceeded, 'tmonier_trade_credit.payment_method.limit_exceeded', [
                 '%available%' => $this->moneyFormatter->format(max(0, $available), (string) $account->getCurrencyCode(), $order->getLocaleCode()),
             ]);

@@ -8,6 +8,7 @@ use Doctrine\ORM\QueryBuilder;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
+use Tmonier\SyliusTradeCreditPlugin\Ageing\AgeingBuckets;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 
@@ -18,6 +19,17 @@ interface OrderPaymentTermsRepositoryInterface extends RepositoryInterface
 
     /** The reserved terms, else the last settled ones (invoice terms of a paid order). */
     public function findLatestForOrder(OrderInterface $order): ?OrderPaymentTermsInterface;
+
+    /**
+     * Items a payment reminder may be due for: open items due within `$daysBeforeDue` days or
+     * past due, and left unpaid overdue items.
+     *
+     * @return list<OrderPaymentTermsInterface>
+     */
+    public function findRemindable(\DateTimeInterface $today, int $daysBeforeDue): array;
+
+    /** The latest terms of the order, whatever their state. */
+    public function findLastForOrder(OrderInterface $order): ?OrderPaymentTermsInterface;
 
     /** @return list<OrderPaymentTermsInterface> reserved terms of the account, oldest due date first */
     public function findOpenByAccount(TradeCreditAccountInterface $account): array;
@@ -42,6 +54,13 @@ interface OrderPaymentTermsRepositoryInterface extends RepositoryInterface
     public function leftUnpaidOverdueCondition(QueryBuilder $queryBuilder, string $termsAlias, \DateTimeInterface $today): string;
 
     public function isLeftUnpaidOverdue(OrderPaymentTermsInterface $terms, \DateTimeInterface $today): bool;
+
+    /**
+     * Ageing of the open items and left unpaid overdue items of every account, per currency.
+     *
+     * @return array<string, AgeingBuckets>
+     */
+    public function sumAgeingByCurrency(\DateTimeInterface $today): array;
 
     /** Admin open items grid. */
     public function createOpenItemsQueryBuilder(): QueryBuilder;

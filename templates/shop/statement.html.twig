@@ -27,16 +27,26 @@
                 {% else %}
                     {% set account = statement.account %}
                     {% set currency = account.currencyCode ?? 'USD' %}
+                    {% set position = statement.position %}
                     <div class="row g-3 mb-4" {{ sylius_test_html_attribute('tmonier-trade-credit-summary') }}>
-                        <div class="col-12 col-sm-4"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.credit_limit'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-credit-limit') }}>{{ account.creditLimit|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
-                        <div class="col-12 col-sm-4"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.committed'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-committed') }}>{{ account.committedAmount|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
-                        <div class="col-12 col-sm-4"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.available'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-available') }}>{{ max(0, account.availableAmount)|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                        <div class="col-12 col-sm"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.credit_limit'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-credit-limit') }}>{{ position.creditLimit|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                        <div class="col-12 col-sm"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.committed'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-committed') }}>{{ position.committedAmount|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                        {% if position.external %}
+                            <div class="col-12 col-sm"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.external_committed'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-external-committed') }}>{{ position.externalCommittedAmount|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                        {% endif %}
+                        <div class="col-12 col-sm"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.available'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-available') }}>{{ max(0, position.availableAmount)|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
                     </div>
                     {% if account.creditHold or not account.enabled %}
                         <div class="alert alert-warning">{{ 'tmonier_trade_credit.ui.account_on_hold_shop'|trans }}</div>
                     {% endif %}
                     {% if statement.overdueAmount > 0 %}
                         <div class="alert alert-danger" {{ sylius_test_html_attribute('tmonier-overdue-alert') }}>{{ 'tmonier_trade_credit.ui.overdue_alert'|trans({'%amount%': statement.overdueAmount|sylius_format_money(currency, app.request.locale)}) }}</div>
+                    {% endif %}
+                    {% if statement.items is not empty %}
+                        <h2 class="h4">{{ 'tmonier_trade_credit.ui.ageing'|trans }}</h2>
+                        <div class="table-responsive mb-4">
+                            {% include '@TmonierSyliusTradeCreditPlugin/shared/ageing.html.twig' with { ageing: statement.ageing, currency } only %}
+                        </div>
                     {% endif %}
                     <h2 class="h4">{{ 'tmonier_trade_credit.ui.open_items'|trans }}</h2>
                     {% if statement.items is empty %}

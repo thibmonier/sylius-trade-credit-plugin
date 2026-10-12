@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'Te warunki przekraczają %net_days% dni, limit ustawiony dla kanału %channel% (limity branżowe, L441-11). Sprawdź obowiązujące przepisy.'
             net: 'Te warunki przekraczają %net_days% dni od daty faktury, zwykłe maksimum prawne między przedsiębiorcami we Francji (L441-10). Sprawdź obowiązujące przepisy.'
             end_of_month: 'Te warunki przekraczają %end_of_month_days% dni koniec miesiąca, zwykłe maksimum prawne między przedsiębiorcami we Francji (L441-10). Sprawdź obowiązujące przepisy.'
+        ageing: 'Struktura wiekowa należności'
+        external_committed: 'Należne poza sklepem'
     form:
         credit_limit: 'Limit kredytu'
         credit_hold: 'Zablokuj kredyt'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Płatność z odroczonym terminem: koniec miesiąca + %days% dni, termin %due_date%.'
         late_payment_penalties: 'Kary za opóźnienie: trzykrotność ustawowej stopy procentowej.'
         recovery_indemnity: 'Stała rekompensata za koszty odzyskiwania należności: 40 EUR.'
+    ageing:
+        current: 'Niewymagalne'
+        days_1_30: '1-30 dni'
+        days_31_60: '31-60 dni'
+        days_61_90: '61-90 dni'
+        days_over_90: 'Ponad 90 dni'
+    email:
+        reminder:
+            subject_before_due: 'Zamówienie nr %number%: termin płatności %due_date%'
+            subject_overdue: 'Zamówienie nr %number%: płatność zaległa od %due_date%'
+            intro_before_due: 'Termin płatności Twojego zamówienia nr %number% z odroczonym terminem (%amount%) upływa %due_date%, za %days% dni.'
+            intro_due_today: 'Termin płatności Twojego zamówienia nr %number% z odroczonym terminem (%amount%) upływa dzisiaj, %due_date%.'
+            intro_overdue: 'Termin płatności Twojego zamówienia nr %number% z odroczonym terminem (%amount%) upłynął %due_date%: płatność jest opóźniona o %days% dni.'
+            pay_by_transfer: 'Prosimy o zapłatę przelewem z podaniem numeru zamówienia %number%.'
+            open_statement: 'Zobacz moje zestawienie'
+            already_paid: 'Jeśli to zamówienie zostało już opłacone, prosimy zignorować tę wiadomość.'

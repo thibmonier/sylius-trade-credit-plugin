@@ -21,10 +21,17 @@
             <p class="text-secondary mb-0">{{ 'tmonier_trade_credit.ui.no_account'|trans }}</p>
         {% else %}
             {% set currency = account.currencyCode ?? 'USD' %}
+            {% set position = tmonier_trade_credit_position(account) %}
             <div class="row text-center mb-3">
-                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.credit_limit'|trans }}</div><div class="h3 mb-0">{{ account.creditLimit|sylius_format_money(currency, app.request.locale) }}</div></div>
-                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.committed'|trans }}</div><div class="h3 mb-0">{{ account.committedAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
-                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.available'|trans }}</div><div class="h3 mb-0" {{ sylius_test_html_attribute('tmonier-available') }}>{{ account.availableAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
+                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.credit_limit'|trans }}</div><div class="h3 mb-0">{{ position.creditLimit|sylius_format_money(currency, app.request.locale) }}</div></div>
+                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.committed'|trans }}</div><div class="h3 mb-0">{{ position.committedAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
+                {% if position.external %}
+                    <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.external_committed'|trans }}</div><div class="h3 mb-0" {{ sylius_test_html_attribute('tmonier-external-committed') }}>{{ position.externalCommittedAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
+                {% endif %}
+                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.available'|trans }}</div><div class="h3 mb-0" {{ sylius_test_html_attribute('tmonier-available') }}>{{ position.availableAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
+            </div>
+            <div class="table-responsive mb-3">
+                {% include '@TmonierSyliusTradeCreditPlugin/shared/ageing.html.twig' with { ageing: tmonier_trade_credit_ageing(account), currency } only %}
             </div>
             <div class="mb-2">
                 {% if not account.enabled %}<span class="badge bg-secondary-lt">{{ 'tmonier_trade_credit.ui.disabled'|trans }}</span>{% endif %}

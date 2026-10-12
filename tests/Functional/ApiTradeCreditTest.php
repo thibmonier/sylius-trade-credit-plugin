@@ -51,6 +51,9 @@ final class ApiTradeCreditTest extends WebTestCase
         self::assertIsArray($items[0]);
         self::assertSame($order->getNumber(), $items[0]['orderNumber'] ?? null);
         self::assertFalse($items[0]['overdue'] ?? null);
+        self::assertSame(0, $items[0]['daysPastDue'] ?? null);
+        self::assertSame(0, $data['externalCommittedAmount'] ?? null);
+        self::assertSame(['current' => $order->getTotal(), 'days_1_30' => 0, 'days_31_60' => 0, 'days_61_90' => 0, 'days_over_90' => 0], $data['ageing'] ?? null);
     }
 
     /** Same figures as the shop page: never a negative available amount, suspension exposed. */

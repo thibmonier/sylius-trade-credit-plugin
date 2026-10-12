@@ -6,9 +6,11 @@ namespace Tmonier\SyliusTradeCreditPlugin\Api;
 
 use ApiPlatform\Metadata\Operation;
 use ApiPlatform\State\ProviderInterface;
+use Psr\Clock\ClockInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
 use Sylius\Component\Core\Model\ShopUserInterface;
 use Symfony\Bundle\SecurityBundle\Security;
+use Tmonier\SyliusTradeCreditPlugin\Ageing\AgeingBuckets;
 use Tmonier\SyliusTradeCreditPlugin\Statement\StatementBuilder;
 use Tmonier\SyliusTradeCreditPlugin\Statement\StatementItem;
 
@@ -18,6 +20,7 @@ final class TradeCreditStatementProvider implements ProviderInterface
     public function __construct(
         private readonly StatementBuilder $statementBuilder,
         private readonly Security $security,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -31,13 +34,15 @@ final class TradeCreditStatementProvider implements ProviderInterface
         }
 
         $account = $statement->account;
+        $position = $statement->position;
+        $today = $this->clock->now();
 
         return new TradeCreditStatementView(
             'current',
             (string) $account->getCurrencyCode(),
-            $account->getCreditLimit(),
-            $account->getCommittedAmount(),
-            max(0, $account->getAvailableAmount()),
+            $position->creditLimit,
+            $position->committedAmount,
+            max(0, $position->getAvailableAmount()),
             $statement->getOverdueAmount(),
             $account->isCreditHold(),
             $account->isEnabled(),
@@ -47,8 +52,11 @@ final class TradeCreditStatementProvider implements ProviderInterface
                 'orderDate' => $item->orderDate->format('Y-m-d'),
                 'dueDate' => $item->dueDate->format('Y-m-d'),
                 'overdue' => $item->overdue,
+                'daysPastDue' => max(0, AgeingBuckets::daysPastDue($item->dueDate, $today)),
                 'placedByYou' => $item->placedByViewer,
             ], $statement->items),
+            $position->externalCommittedAmount,
+            $statement->ageing->toArray(),
         );
     }
 }

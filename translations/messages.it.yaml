@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'Queste condizioni superano %net_days% giorni, il limite configurato per il canale %channel% (limiti settoriali, L441-11). Verifichi le regole applicabili.'
             net: 'Queste condizioni superano %net_days% giorni dalla data della fattura, il massimo legale usuale tra professionisti in Francia (L441-10). Verifichi le regole applicabili.'
             end_of_month: 'Queste condizioni superano %end_of_month_days% giorni fine mese, il massimo legale usuale tra professionisti in Francia (L441-10). Verifichi le regole applicabili.'
+        ageing: 'Anzianità dei crediti'
+        external_committed: 'Dovuto al di fuori del negozio'
     form:
         credit_limit: 'Fido'
         credit_hold: 'Bloccare il credito'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Pagamento a credito: fine mese + %days% giorni, scadenza il %due_date%.'
         late_payment_penalties: 'Penali di mora: tre volte il tasso di interesse legale.'
         recovery_indemnity: 'Indennità forfettaria per spese di recupero in caso di ritardo: 40 EUR.'
+    ageing:
+        current: 'Non scaduto'
+        days_1_30: '1-30 giorni'
+        days_31_60: '31-60 giorni'
+        days_61_90: '61-90 giorni'
+        days_over_90: 'Oltre 90 giorni'
+    email:
+        reminder:
+            subject_before_due: 'Ordine n. %number%: pagamento in scadenza il %due_date%'
+            subject_overdue: 'Ordine n. %number%: pagamento scaduto dal %due_date%'
+            intro_before_due: 'Il suo ordine n. %number% pagato a credito (%amount%) scade il %due_date%, tra %days% giorni.'
+            intro_due_today: 'Il suo ordine n. %number% pagato a credito (%amount%) scade oggi, %due_date%.'
+            intro_overdue: 'Il suo ordine n. %number% pagato a credito (%amount%) scadeva il %due_date%: è scaduto da %days% giorni.'
+            pay_by_transfer: 'La preghiamo di pagarlo con bonifico indicando il numero d''ordine %number%.'
+            open_statement: 'Vedi il mio estratto conto'
+            already_paid: 'Se ha già pagato questo ordine, ignori questo messaggio.'

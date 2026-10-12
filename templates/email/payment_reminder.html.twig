@@ -1,0 +1,41 @@
+{% extends '@SyliusCore/Email/layout.html.twig' %}
+
+{% block subject %}
+    {% set parameters = {
+        '%number%': order.number,
+        '%amount%': amount|sylius_format_money(currencyCode, localeCode),
+        '%due_date%': dueDate|date('Y-m-d'),
+        '%days%': daysPastDue|abs,
+        '%channel%': channel.name|default(''),
+    } %}
+    {{- (overdue ? 'tmonier_trade_credit.email.reminder.subject_overdue' : 'tmonier_trade_credit.email.reminder.subject_before_due')|trans(parameters, null, localeCode) -}}
+{% endblock %}
+
+{% block content %}
+    {% set parameters = {
+        '%number%': order.number,
+        '%amount%': amount|sylius_format_money(currencyCode, localeCode),
+        '%due_date%': dueDate|date('Y-m-d'),
+        '%days%': daysPastDue|abs,
+        '%channel%': channel.name|default(''),
+    } %}
+    <div style="text-align: left;">
+        <p>{{ (overdue ? 'tmonier_trade_credit.email.reminder.intro_overdue' : (daysPastDue == 0 ? 'tmonier_trade_credit.email.reminder.intro_due_today' : 'tmonier_trade_credit.email.reminder.intro_before_due'))|trans(parameters, null, localeCode)|e }}</p>
+        <p>{{ 'tmonier_trade_credit.email.reminder.pay_by_transfer'|trans(parameters, null, localeCode)|e }}</p>
+        {% if overdue %}
+            {# France, L441-10 of the Code de commerce: mandatory mentions between professionals. #}
+            <p style="font-size: 13px; color: #666;">
+                {{ 'tmonier_trade_credit.invoice.late_payment_penalties'|trans({}, null, localeCode)|e }}<br>
+                {{ 'tmonier_trade_credit.invoice.recovery_indemnity'|trans({}, null, localeCode)|e }}
+            </p>
+        {% endif %}
+        {% if statementUrl %}
+            <p style="margin: 25px 0; text-align: center;">
+                <a href="{{ statementUrl|e }}" style="display: inline-block; text-decoration: none; padding: 12px 24px; background: #1abb9c; color: #fff; border-radius: 4px;">
+                    {{ 'tmonier_trade_credit.email.reminder.open_statement'|trans({}, null, localeCode)|e }}
+                </a>
+            </p>
+        {% endif %}
+        <p style="font-size: 13px; color: #666;">{{ 'tmonier_trade_credit.email.reminder.already_paid'|trans(parameters, null, localeCode)|e }}</p>
+    </div>
+{% endblock %}

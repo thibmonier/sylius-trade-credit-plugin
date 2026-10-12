@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'Der Kauf auf Rechnung ist ausgesetzt, solange Rechnungen überfällig sind.'
         credit_hold: 'Der Kauf auf Rechnung ist für Ihr Konto ausgesetzt.'
         limit_exceeded: 'Die Bestellsumme übersteigt Ihren verfügbaren Kredit: Wählen Sie eine andere Zahlungsart.'
+        unavailable: 'Der Kauf auf Rechnung ist vorübergehend nicht verfügbar: Wählen Sie eine andere Zahlungsart oder versuchen Sie es später erneut.'
     account:
         unique: 'Dieser Inhaber hat bereits ein Rechnungskauf-Konto.'
     payment_terms_policy:

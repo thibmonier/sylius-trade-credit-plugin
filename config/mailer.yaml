@@ -1,0 +1,5 @@
+sylius_mailer:
+    emails:
+        tmonier_trade_credit_payment_reminder:
+            subject: tmonier_trade_credit.email.reminder.subject_overdue
+            template: "@TmonierSyliusTradeCreditPlugin/email/payment_reminder.html.twig"

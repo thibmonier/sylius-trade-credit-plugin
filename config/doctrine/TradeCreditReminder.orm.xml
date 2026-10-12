@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping">
+
+    <entity name="Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditReminder" table="tmonier_trade_credit_reminder">
+        <unique-constraints>
+            <unique-constraint name="tmonier_trade_credit_reminder_level_uniq" columns="order_id,due_date,reminder_level" />
+        </unique-constraints>
+
+        <id name="id" column="id" type="guid" />
+
+        <field name="dueDate" column="due_date" type="date_immutable" />
+        <field name="level" column="reminder_level" type="integer" />
+        <field name="email" column="email" type="string" length="255" />
+        <field name="sentAt" column="sent_at" type="datetime_immutable" />
+
+        <many-to-one field="order" target-entity="Sylius\Component\Order\Model\OrderInterface">
+            <join-column name="order_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+    </entity>
+</doctrine-mapping>

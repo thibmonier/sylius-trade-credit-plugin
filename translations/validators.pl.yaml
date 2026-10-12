@@ -14,6 +14,7 @@ tmonier_trade_credit:
         overdue: 'Płatność z odroczonym terminem jest wstrzymana z powodu zaległych faktur.'
         credit_hold: 'Płatność z odroczonym terminem jest zawieszona dla Twojego konta.'
         limit_exceeded: 'Wartość zamówienia przekracza dostępny kredyt: wybierz inną metodę płatności.'
+        unavailable: 'Płatność z odroczonym terminem jest chwilowo niedostępna: wybierz inną metodę płatności lub spróbuj ponownie później.'
     account:
         unique: 'Ten właściciel ma już konto kredytowe.'
     payment_terms_policy:

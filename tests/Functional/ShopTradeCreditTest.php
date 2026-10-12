@@ -142,6 +142,11 @@ final class ShopTradeCreditTest extends WebTestCase
         self::assertStringContainsString('1,000.00', $crawler->filter('[data-test-tmonier-credit-limit]')->text());
         self::assertSame($account->getId(), $this->termsRepository()->findReservedForOrder($open)?->getAccount()?->getId());
         self::assertStringContainsString('Trade credit', $crawler->filter('body')->text());
+        // Ageing: the open item is not due, the overdue one is 5 days past due.
+        $ageing = $crawler->filter('[data-test-tmonier-ageing]');
+        self::assertCount(1, $ageing);
+        self::assertStringContainsString('1-30 days', $ageing->text());
+        self::assertNotSame($ageing->filter('[data-test-tmonier-ageing-bucket="days_31_60"]')->text(), $ageing->filter('[data-test-tmonier-ageing-bucket="days_1_30"]')->text());
     }
 
     public function testTheStatementOfACustomerWithoutAccount(): void

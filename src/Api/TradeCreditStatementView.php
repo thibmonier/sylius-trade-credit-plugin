@@ -9,9 +9,12 @@ final class TradeCreditStatementView
 {
     /**
      * `availableAmount` is never negative (an account allowed to exceed its limit shows 0);
-     * `enabled` false or `creditHold` true: payment on account is not available.
+     * `enabled` false or `creditHold` true: payment on account is not available. With an
+     * external credit provider (ERP), `creditLimit` is its limit and `externalCommittedAmount`
+     * what is owed outside the shop. `ageing`: open items by days past due.
      *
-     * @param list<array{orderNumber: string, amount: int, orderDate: string, dueDate: string, overdue: bool, placedByYou: bool}> $openItems
+     * @param list<array{orderNumber: string, amount: int, orderDate: string, dueDate: string, overdue: bool, daysPastDue: int, placedByYou: bool}> $openItems
+     * @param array{current: int, days_1_30: int, days_31_60: int, days_61_90: int, days_over_90: int} $ageing
      */
     public function __construct(
         public readonly string $id,
@@ -23,6 +26,8 @@ final class TradeCreditStatementView
         public readonly bool $creditHold,
         public readonly bool $enabled,
         public readonly array $openItems,
+        public readonly int $externalCommittedAmount = 0,
+        public readonly array $ageing = ['current' => 0, 'days_1_30' => 0, 'days_31_60' => 0, 'days_61_90' => 0, 'days_over_90' => 0],
     ) {
     }
 }

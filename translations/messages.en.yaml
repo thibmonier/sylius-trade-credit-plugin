@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'These terms exceed %net_days% days, the limit configured for the channel %channel% (sector caps, L441-11). Check the rules that apply to you.'
             net: 'These terms exceed %net_days% days from the invoice date, the usual legal maximum between professionals in France (L441-10). Check the rules that apply to you.'
             end_of_month: 'These terms exceed %end_of_month_days% days end of month, the usual legal maximum between professionals in France (L441-10). Check the rules that apply to you.'
+        ageing: 'Ageing'
+        external_committed: 'Owed outside the shop'
     form:
         credit_limit: 'Credit limit'
         credit_hold: 'Credit hold'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Payment on account: end of month + %days% days, due %due_date%.'
         late_payment_penalties: 'Late payment penalties: three times the legal interest rate.'
         recovery_indemnity: 'Fixed recovery indemnity for late payment: 40 EUR.'
+    ageing:
+        current: 'Not due'
+        days_1_30: '1-30 days'
+        days_31_60: '31-60 days'
+        days_61_90: '61-90 days'
+        days_over_90: 'Over 90 days'
+    email:
+        reminder:
+            subject_before_due: 'Order #%number%: payment due on %due_date%'
+            subject_overdue: 'Order #%number%: payment overdue since %due_date%'
+            intro_before_due: 'Your order #%number% paid on account (%amount%) is due on %due_date%, in %days% days.'
+            intro_due_today: 'Your order #%number% paid on account (%amount%) is due today, %due_date%.'
+            intro_overdue: 'Your order #%number% paid on account (%amount%) was due on %due_date%: it is %days% days overdue.'
+            pay_by_transfer: 'Please pay it by bank transfer, quoting the order number #%number%.'
+            open_statement: 'View my trade credit statement'
+            already_paid: 'If you have already paid this order, please ignore this message.'

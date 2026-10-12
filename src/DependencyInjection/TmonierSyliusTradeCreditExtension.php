@@ -18,7 +18,7 @@ final class TmonierSyliusTradeCreditExtension extends AbstractResourceExtension 
 
     public function load(array $configs, ContainerBuilder $container): void
     {
-        /** @var array{legal_limits: array{net_days: int, end_of_month_days: int, channels: array<string, array{net_days: int, end_of_month_days: int}>}, driver: string, resources: array<string, mixed>} $config */
+        /** @var array{legal_limits: array{net_days: int, end_of_month_days: int, channels: array<string, array{net_days: int, end_of_month_days: int}>}, reminders: array{levels: list<int>}, driver: string, resources: array<string, mixed>} $config */
         $config = $this->processConfiguration(new Configuration(), $configs);
 
         $this->registerResources('tmonier_trade_credit', $config['driver'], $config['resources'], $container);
@@ -26,6 +26,9 @@ final class TmonierSyliusTradeCreditExtension extends AbstractResourceExtension 
         $container->setParameter('tmonier_trade_credit.legal_limits.net_days', $config['legal_limits']['net_days']);
         $container->setParameter('tmonier_trade_credit.legal_limits.end_of_month_days', $config['legal_limits']['end_of_month_days']);
         $container->setParameter('tmonier_trade_credit.legal_limits.channels', $config['legal_limits']['channels']);
+        $levels = array_values(array_unique($config['reminders']['levels']));
+        sort($levels);
+        $container->setParameter('tmonier_trade_credit.reminders.levels', $levels);
 
         $loader = new PhpFileLoader($container, new FileLocator(__DIR__ . '/../../config'));
         $loader->load('services.php');

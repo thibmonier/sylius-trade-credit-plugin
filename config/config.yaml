@@ -1,6 +1,7 @@
 imports:
     - { resource: "grids/*.yaml" }
     - { resource: "twig_hooks/**/*.yaml" }
+    - { resource: "mailer.yaml" }
 
 sylius_grid:
     templates:

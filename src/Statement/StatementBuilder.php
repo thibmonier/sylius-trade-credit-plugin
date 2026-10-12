@@ -10,11 +10,13 @@ use Sylius\Component\Core\Model\OrderInterface;
 use Symfony\Component\Routing\Exception\ExceptionInterface as RoutingException;
 use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
+use Tmonier\SyliusTradeCreditPlugin\Credit\CreditPositionResolver;
 use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 
 /**
- * Statement of the account of a customer: limit, committed, available, open items. Invoice PDF
- * links are added when sylius/invoicing-plugin is installed and enabled.
+ * Statement of the account of a customer: limit, committed, available (with the external
+ * position when there is one), open items and their ageing. Invoice PDF links are added when
+ * sylius/invoicing-plugin is installed and enabled.
  */
 final class StatementBuilder
 {
@@ -23,6 +25,7 @@ final class StatementBuilder
         private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
         private readonly ClockInterface $clock,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly CreditPositionResolver $positionResolver,
         private readonly ?object $invoiceRepository = null,
     ) {
     }
@@ -58,7 +61,7 @@ final class StatementBuilder
             );
         }
 
-        return new Statement($account, $items);
+        return new Statement($account, $items, $this->positionResolver->resolveForDisplay($account), $today);
     }
 
     private function invoiceUrl(OrderInterface $order): ?string

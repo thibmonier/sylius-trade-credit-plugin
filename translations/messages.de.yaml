@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'Diese Bedingungen überschreiten %net_days% Tage, das für den Kanal %channel% konfigurierte Limit (Branchengrenzen, L441-11). Prüfen Sie die geltenden Regeln.'
             net: 'Diese Bedingungen überschreiten %net_days% Tage ab Rechnungsdatum, das übliche gesetzliche Maximum zwischen Unternehmen in Frankreich (L441-10). Prüfen Sie die geltenden Regeln.'
             end_of_month: 'Diese Bedingungen überschreiten %end_of_month_days% Tage zum Monatsende, das übliche gesetzliche Maximum zwischen Unternehmen in Frankreich (L441-10). Prüfen Sie die geltenden Regeln.'
+        ageing: 'Altersstruktur'
+        external_committed: 'Außerhalb des Shops geschuldet'
     form:
         credit_limit: 'Kreditlimit'
         credit_hold: 'Kreditsperre'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Zahlung auf Rechnung: Monatsende + %days% Tage, fällig am %due_date%.'
         late_payment_penalties: 'Verzugszinsen: das Dreifache des gesetzlichen Zinssatzes.'
         recovery_indemnity: 'Pauschale Entschädigung für Beitreibungskosten bei Zahlungsverzug: 40 EUR.'
+    ageing:
+        current: 'Nicht fällig'
+        days_1_30: '1-30 Tage'
+        days_31_60: '31-60 Tage'
+        days_61_90: '61-90 Tage'
+        days_over_90: 'Über 90 Tage'
+    email:
+        reminder:
+            subject_before_due: 'Bestellung #%number%: Zahlung fällig am %due_date%'
+            subject_overdue: 'Bestellung #%number%: Zahlung seit %due_date% überfällig'
+            intro_before_due: 'Ihre auf Rechnung bezahlte Bestellung #%number% (%amount%) ist am %due_date% fällig, in %days% Tagen.'
+            intro_due_today: 'Ihre auf Rechnung bezahlte Bestellung #%number% (%amount%) ist heute, am %due_date%, fällig.'
+            intro_overdue: 'Ihre auf Rechnung bezahlte Bestellung #%number% (%amount%) war am %due_date% fällig: Sie ist seit %days% Tagen überfällig.'
+            pay_by_transfer: 'Bitte überweisen Sie den Betrag unter Angabe der Bestellnummer #%number%.'
+            open_statement: 'Meinen Kontoauszug ansehen'
+            already_paid: 'Falls Sie diese Bestellung bereits bezahlt haben, betrachten Sie diese Nachricht bitte als gegenstandslos.'

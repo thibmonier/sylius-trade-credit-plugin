@@ -36,6 +36,8 @@ tmonier_trade_credit:
             net_channel: 'Estas condiciones superan %net_days% días, el límite configurado para el canal %channel% (límites sectoriales, L441-11). Compruebe las normas aplicables.'
             net: 'Estas condiciones superan %net_days% días desde la fecha de factura, el máximo legal habitual entre profesionales en Francia (L441-10). Compruebe las normas aplicables.'
             end_of_month: 'Estas condiciones superan %end_of_month_days% días fin de mes, el máximo legal habitual entre profesionales en Francia (L441-10). Compruebe las normas aplicables.'
+        ageing: 'Antigüedad'
+        external_committed: 'Adeudado fuera de la tienda'
     form:
         credit_limit: 'Límite de crédito'
         credit_hold: 'Bloquear el crédito'
@@ -75,3 +77,19 @@ tmonier_trade_credit:
             end_of_month_then_days: 'Pago a crédito: fin de mes + %days% días, vencimiento el %due_date%.'
         late_payment_penalties: 'Penalizaciones por demora: tres veces el tipo de interés legal.'
         recovery_indemnity: 'Indemnización fija por costes de cobro en caso de demora: 40 EUR.'
+    ageing:
+        current: 'No vencido'
+        days_1_30: '1-30 días'
+        days_31_60: '31-60 días'
+        days_61_90: '61-90 días'
+        days_over_90: 'Más de 90 días'
+    email:
+        reminder:
+            subject_before_due: 'Pedido n.º %number%: pago con vencimiento el %due_date%'
+            subject_overdue: 'Pedido n.º %number%: pago vencido desde el %due_date%'
+            intro_before_due: 'Su pedido n.º %number% pagado a crédito (%amount%) vence el %due_date%, dentro de %days% días.'
+            intro_due_today: 'Su pedido n.º %number% pagado a crédito (%amount%) vence hoy, %due_date%.'
+            intro_overdue: 'Su pedido n.º %number% pagado a crédito (%amount%) vencía el %due_date%: lleva %days% días vencido.'
+            pay_by_transfer: 'Por favor, páguelo por transferencia indicando el número de pedido %number%.'
+            open_statement: 'Ver mi extracto de crédito'
+            already_paid: 'Si ya ha pagado este pedido, ignore este mensaje.'
