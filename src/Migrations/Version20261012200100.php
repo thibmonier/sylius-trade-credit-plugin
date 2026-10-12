@@ -32,8 +32,9 @@ final class Version20261012200100 extends AbstractMigration
         }
 
         foreach (self::TABLES as $table) {
-            $this->addSql(sprintf('ALTER TABLE %s ALTER id DROP DEFAULT', $table));
+            // Identity first (DROP DEFAULT is refused on an identity column), then the SERIAL default.
             $this->addSql(sprintf('ALTER TABLE %s ALTER id DROP IDENTITY IF EXISTS', $table));
+            $this->addSql(sprintf('ALTER TABLE %s ALTER id DROP DEFAULT', $table));
             $this->addSql(sprintf('CREATE SEQUENCE IF NOT EXISTS %s_id_seq INCREMENT BY 1 MINVALUE 1 START 1', $table));
             $this->addSql(sprintf("SELECT setval('%1\$s_id_seq', COALESCE((SELECT MAX(id) FROM %1\$s), 0) + 1, false)", $table));
         }
