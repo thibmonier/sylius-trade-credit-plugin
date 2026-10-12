@@ -147,8 +147,10 @@ return static function (ContainerConfigurator $container): void {
         ->args([
             service('tmonier_trade_credit.reserver'),
             service('tmonier_trade_credit.provider.payment_terms_policy'),
+            service('logger'),
         ])
         ->tag('doctrine.event_listener', ['event' => 'onFlush'])
+        ->tag('monolog.logger', ['channel' => 'tmonier_trade_credit'])
     ;
 
     $services

@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\EventListener;
 
 use Doctrine\ORM\Event\OnFlushEventArgs;
+use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
+use Tmonier\SyliusTradeCreditPlugin\Exception\TradeCreditReservationException;
 use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 
 /**
@@ -18,13 +20,15 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
  * order page, API, admin):
  * - to payment on account: reserve (a refusal aborts the flush, so the change is not saved);
  * - from payment on account: release;
- * - new payment on account created after a failed or cancelled one: reserve.
+ * - new payment on account created after a failed or cancelled one: reserve (a refusal is only
+ *   logged: the payment then needs another method).
  */
 final class PaymentMethodSwitchListener
 {
     public function __construct(
         private readonly TradeCreditReserver $reserver,
         private readonly PaymentTermsPolicyProvider $policyProvider,
+        private readonly LoggerInterface $logger,
     ) {
     }
 
@@ -68,7 +72,14 @@ final class PaymentMethodSwitchListener
                 $this->isPendingPaymentOfPlacedOrder($entity) &&
                 $this->policyProvider->isOnAccount($method)
             ) {
-                $this->reserver->reserve($order, $method, false);
+                try {
+                    $this->reserver->reserve($order, $method, false);
+                } catch (TradeCreditReservationException $exception) {
+                    // Created by the order processor (e.g. after a failed payment): the method is
+                    // now refused by the eligibility checker, so the pay routes send the customer
+                    // to the order page to choose another one. Not worth failing the flush.
+                    $this->logger->warning(sprintf('No trade credit reserved for the new payment of order #%s: %s', (string) $order->getNumber(), $exception->getTranslationKey()));
+                }
             }
         }
     }

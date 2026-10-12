@@ -216,6 +216,31 @@ final class ReservationTest extends KernelTestCase
         self::assertSame([OrderPaymentTermsInterface::STATE_RELEASED, OrderPaymentTermsInterface::STATE_RESERVED], $this->termsStates($order));
     }
 
+    public function testANewPaymentOnAccountBeyondTheLimitIsKeptWithoutReservation(): void
+    {
+        $method = $this->onAccountMethod();
+        $customer = $this->customer();
+        $account = $this->account($customer);
+        $order = $this->order('completed', $method, $customer);
+        $account->setCreditLimit(1);
+        $this->entityManager()->flush();
+        $payment = $order->getLastPayment(PaymentInterface::STATE_NEW);
+        self::assertNotNull($payment);
+
+        $this->applyPayment($payment, PaymentTransitions::TRANSITION_FAIL);
+
+        self::assertSame(0, $this->committed($account));
+        self::assertSame([OrderPaymentTermsInterface::STATE_RELEASED], $this->termsStates($order));
+        $newPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);
+        self::assertNotNull($newPayment);
+        $checker = $this->service(\Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodEligibilityCheckerInterface::class);
+        self::assertInstanceOf(\Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodEligibilityCheckerInterface::class, $checker);
+        $paymentMethod = $newPayment->getMethod();
+        self::assertNotNull($paymentMethod);
+        // Either replaced by an eligible method, or refused (the pay routes then ask for another one).
+        self::assertTrue($paymentMethod !== $method || null !== $checker->getIneligibility($paymentMethod, $newPayment));
+    }
+
     public function testSwitchingThePaymentMethodAfterCheckoutReleasesAndReserves(): void
     {
         $method = $this->onAccountMethod();
