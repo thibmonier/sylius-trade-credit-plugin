@@ -32,6 +32,10 @@ terms in Factur-X invoices. B2B only: this is not consumer credit.
 | Stay within the law | Warnings when terms exceed 60 days or 45 days end of month (France, L441-10; per channel limits for the sector caps of L441-11). |
 | Factur-X invoices | With [tmonier/sylius-facturx-plugin](https://github.com/thibmonier/sylius-facturx-plugin) 1.1: due date (BT-9) and payment terms (BT-20) of the order, with the late payment penalties and 40 EUR recovery indemnity mentions. |
 | Detect drift | `tmonier:trade-credit:recalculate` compares committed amounts with the open items (dry run; `--apply` fixes and logs an adjustment). |
+| Record bank transfers in bulk *(1.1)* | `tmonier:trade-credit:import-payments payments.csv` settles the open items of a CSV file (order number + amount, exact match): dry run by default, **all or nothing** (one wrong line and nothing is settled), **idempotent** (an order already paid is reported and skipped, never settled twice). |
+| Remind customers *(1.1)* | `tmonier:trade-credit:send-reminders` (daily cron): e-mail reminders before and after the due date, at configurable levels (default 5 days before, 1, 15 and 30 days after), **one per open item and level**, in the order locale (7 languages), with the L441-10 late payment mentions once overdue. |
+| See how old the debt is *(1.1)* | **Ageing buckets** (not due, 1-30, 31-60, 61-90, over 90 days) on the statement, in the shop API, on the customer card and for all accounts above the open items grid. |
+| Use the credit position of your ERP *(1.1)* | `ExternalCreditProviderInterface`: an ERP can provide the credit limit and the amount owed outside the shop; payment on account then uses them (fail closed when the ERP cannot be reached). Default: Sylius figures only. |
 
 Also included: demo fixture, translations in English, French, German, Spanish, Italian, Dutch
 and Polish, Twig Hooks, MySQL, MariaDB and PostgreSQL support.
@@ -113,10 +117,70 @@ tmonier_sylius_trade_credit:
         end_of_month_days: 45   # warning above 45 days end of month
         channels:               # per channel code, e.g. a sector cap (L441-11)
             WHOLESALE: { net_days: 30, end_of_month_days: 30 }
+    reminders:
+        levels: [-5, 1, 15, 30] # days relative to the due date (negative: before); [] disables them
 ```
 
 A payment terms policy is checked against the caps of the channels of its payment method; an
 account with its own terms against the strictest configured cap.
+
+### Payment reminders
+
+Run `bin/console tmonier:trade-credit:send-reminders` once a day (`--dry-run` lists them). For
+each open item (and each order left unpaid after leaving payment on account), only the highest
+level reached is sent, once: a level is recorded before the e-mail is sent (unique per order,
+due date and level), so running the command twice, or two runs at the same time, never sends
+a reminder twice; an e-mail that fails is sent by the next run. The e-mail
+(`tmonier_trade_credit_payment_reminder`, template
+`@TmonierSyliusTradeCreditPlugin/email/payment_reminder.html.twig`) goes to the customer of
+the order, in the order locale, with a link to the statement when the channel has a hostname.
+
+### Payments CSV import
+
+```csv
+order_number;amount;currency
+000000021;13.12;EUR
+000000022;1 312,50;EUR
+```
+
+A header line with `order_number` and `amount` (decimal, `.` or `,`), optional `currency`;
+other columns (bank reference, date...) are ignored; `,`, `;` or tab separated. Each line must
+match an open item exactly (order number, amount, currency). Run it without `--apply` first:
+
+```bash
+bin/console tmonier:trade-credit:import-payments payments.csv           # dry run
+bin/console tmonier:trade-credit:import-payments payments.csv --apply   # settles, all or nothing
+```
+
+Settling is the same as "Mark as paid" (core `sylius_payment` `complete` transition).
+
+### External credit provider (ERP)
+
+```php
+use Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditPosition;
+use Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditProviderInterface;
+use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
+
+final class ErpCreditProvider implements ExternalCreditProviderInterface
+{
+    public function getPosition(TradeCreditAccountInterface $account): ?ExternalCreditPosition
+    {
+        // Amounts in minor units. Null: Sylius figures only for this account.
+        return new ExternalCreditPosition(creditLimit: 5_000_00, externalCommittedAmount: 1_200_00);
+    }
+}
+```
+
+```yaml
+# config/services.yaml
+Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditProviderInterface: '@App\Credit\ErpCreditProvider'
+```
+
+The ERP limit (when not null) replaces the limit of the account and the amount owed outside
+the shop reduces the available credit, in the method lists and in the atomic reservation. If
+the provider throws (ERP unreachable), payment on account is refused with "temporarily
+unavailable" (fail closed) and the statement shows the Sylius figures. Called on each
+eligibility check: cache it in your provider if the ERP is slow.
 
 Resources (`account`, `payment_terms_policy`, `order_payment_terms`, `ledger_entry`) can be
 overridden like any Sylius resource (`tmonier_sylius_trade_credit.resources.account.classes.model`, ...).
@@ -156,6 +220,7 @@ overridden like any Sylius resource (`tmonier_sylius_trade_credit.resources.acco
 | `sylius_admin.customer.show.content.sections` → `tmonier_trade_credit` | Trade credit card of the customer page |
 | `tmonier_trade_credit_admin.account.{create,update}.content.form.sections.general` → `fields` | Account form |
 | `tmonier_trade_credit_admin.payment_terms_policy.{create,update}.content.form.sections.general` → `fields` | Payment terms form |
+| `tmonier_trade_credit_admin.open_item.index.content` → `ageing` | Ageing of every account above the open items grid |
 
 Services: `tmonier_trade_credit.reserver` (only writer of committed amounts),
 `tmonier_trade_credit.provider.account`, `tmonier_trade_credit.order_hold.eligibility_checker`
@@ -172,8 +237,10 @@ shop users of the fixtures (the demo channel requires a verified account to sign
 
 - **Single currency** per account (the channel base currency); no partial payments: an open
   item is paid in full with "Mark as paid".
-- No reminders, ageing buckets, payment CSV import, ERP connector, interest computation or
-  accounting export in v1. No fees or surcharges.
+- No interest computation, no allocation of one transfer to several orders (one CSV line per
+  order), no CAMT/MT940 bank statements, no accounting export. No fees or surcharges.
+- The payments import is a console command (no upload form in the admin).
+- Reminders are e-mails to the customer of the order only (no copy to the company or to staff).
 - In the shop, the reservation (its own SQL transaction) and the save of the completed order are
   two steps: if saving the order fails afterwards, the reservation left on the cart is replaced
   when the checkout is completed again, and released after an hour by

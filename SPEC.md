@@ -111,18 +111,58 @@ cannot be deleted.
   CRUD, open items grid (state, overdue, search) with Mark as paid (CSRF, core `complete`
   transition), ledger per account.
 - Factur-X (optional, `interface_exists`): `InvoicePaymentTermsProviderInterface`, priority 10.
+- Commands `tmonier:trade-credit:import-payments <file> [--apply]` and
+  `tmonier:trade-credit:send-reminders [--dry-run]` (1.1, see §5).
+- Shop API 1.1: `ageing`, `externalCommittedAmount`, `openItems[].daysPastDue`.
 - Command `tmonier:trade-credit:recalculate [--apply]`: reservations older than an hour on
   orders that are not placed (or cancelled) are released; reservations of placed orders whose
   last payment has another method (method switch reserved in `onFlush`, its own transaction,
   then the flush failed) are reserved again for that method when it is on account (same terms)
   or released; then each drifted committed amount is set under the account lock.
 
-## 5. Out of scope (v1)
+## 5. Version 1.1 (memo §3.4 "v1.1")
 
-Payment CSV import, reminders, ageing buckets, external credit provider (v1.1); allocation of a
-transfer to several invoices, late interest computation, CAMT/MT940, scoring, approval queue
-when over limit (purchase-approval plugin), multi-currency, accounting exports, B2C / BNPL,
-fees.
+- **Payments CSV import** (`PaymentCsvReader`, `PaymentImporter`, command
+  `tmonier:trade-credit:import-payments`). Exact match only (order number, amount in minor
+  units, currency when given), on an open item or an order left unpaid after its due date.
+  Decisions: dry run by default; **all or nothing** (any error, including an unknown order or a
+  duplicated line, and nothing is settled; settling runs in one transaction, each payment row
+  locked and read again); **idempotent** (an order already paid is reported `already_paid` and
+  skipped; the reservation guard of `close()` remains the last line of defence). Settling is
+  the core `sylius_payment` `complete` transition (`OpenItemSettler`, shared with "Mark as
+  paid"), so invoicing and the reservation follow as for any payment. Console only (no admin
+  upload) in 1.1.
+- **Reminders** (`ReminderSender`, command `tmonier:trade-credit:send-reminders`). Levels in
+  days relative to the due date (`reminders.levels`, default `[-5, 1, 15, 30]`). Per item
+  (open item, or order left unpaid), only the highest level reached is due, and only if no
+  level at least as high was sent for that order and due date. Idempotence: the level is
+  inserted first in `tmonier_trade_credit_reminder` (unique order + due date + level, in its own
+  transaction or savepoint), then the e-mail is sent; a duplicate key means a concurrent run
+  sent it; a failed e-mail deletes the row so that the next run sends it. A later due date
+  (another method on account) starts a new sequence. E-mail to the customer of the order, in
+  the order locale, with the L441-10 mentions (penalties, 40 EUR indemnity) once overdue.
+- **Ageing buckets** (`AgeingBuckets`): days past due = today − due date (calendar days);
+  `current` ≤ 0, then 1-30, 31-60, 61-90, over 90. Items: open items and left unpaid overdue
+  items. Statement and shop API per account; admin: customer card (per account) and the open
+  items page (all accounts, per currency, one SQL query with `SUM(CASE ...)` on date
+  boundaries).
+- **External credit provider** (`ExternalCreditProviderInterface`, `CreditPositionResolver`).
+  The ERP may give a credit limit (replaces the account limit) and an amount owed outside the
+  shop (added to the committed amount). Available = limit − committed in Sylius − owed outside.
+  Used by the eligibility checker, the reservation (`UPDATE ... WHERE <limit> -
+  committed_amount - :external >= :amount`, the limit being the column or the ERP value) and
+  the statement / API / customer card. Accounts allowed to exceed their limit do not call it.
+  Decision: **fail closed** — a provider exception refuses payment on account
+  (`unavailable`), the statement shows the Sylius figures, `recalculate` leaves a mismatched
+  reservation alone until the ERP answers. The committed amount stays a Sylius figure (the
+  ERP does not change it).
+- **PostgreSQL ids**: migration `Version20261012200100` turns the IDENTITY (DBAL 4) / SERIAL
+  (DBAL 3) ids of accounts and policies into plain integers fed by `<table>_id_seq` (what the
+  ORM mapping and Sylius use), keeping existing ids. No-op on MySQL and MariaDB.
+
+Still out of scope: allocation of a transfer to several invoices, late interest computation,
+CAMT/MT940, scoring, approval queue when over limit (purchase-approval plugin), multi-currency,
+accounting exports, B2C / BNPL, fees.
 
 ## 6. Tests
 
@@ -145,4 +185,10 @@ payments, switch between two methods on account, a reservation committed by a se
 connection seen under the lock, cart left with a reservation, stale reservations released by
 the command, release at most once, recalculation under the lock, lost reservation and the
 unpaid-orders cron, next payment beyond the limit, overdue not cleared by a switch, shared
-account statement, BIGINT amounts.
+account statement, BIGINT amounts. 1.1: ageing boundaries, CSV reader formats, credit position
+resolver (unit); payments import (dry run, apply, re-import never settles twice, one wrong line
+and nothing settled, errors, left unpaid item), reminders (levels, once per level with a mock
+clock, dry run, paid order, failed e-mail sent by the next run, real e-mail with the L441-10
+mentions), external provider (owed outside the shop, ERP limit in the reservation, fail
+closed), ageing of the statement and of all accounts (integration); statement, customer card,
+open items page and API ageing (functional).

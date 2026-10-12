@@ -17,6 +17,8 @@ vendor/bin/phpstan analyse                # level max, src + tests
 vendor/bin/ecs check
 vendor/bin/console lint:container
 vendor/bin/console tmonier:trade-credit:recalculate
+vendor/bin/console tmonier:trade-credit:send-reminders --dry-run
+vendor/bin/console tmonier:trade-credit:import-payments payments.csv
 ```
 
 Local env overrides (gitignored): `compose.override.yml` (MySQL published on 3328, MailHog on
@@ -49,6 +51,12 @@ with the default fixture suite + `tmonier_trade_credit` (method "On account (net
   `Factory/TradeCreditAccountFactory::createForCustomer()`, menus.
 - `FacturX/TradeCreditInvoicePaymentTermsProvider` (`config/services/facturx.php`, loaded when
   the Factur-X interface exists; facturx is require-dev, not enabled in the test application).
+- 1.1: `Import/` (payments CSV reader and importer, command `import-payments`),
+  `Payment/OpenItemSettler` (shared with Mark as paid), `Reminder/ReminderSender` (command
+  `send-reminders`, entity `TradeCreditReminder`, e-mail `templates/email/payment_reminder`,
+  `config/mailer.yaml` imported by `config/config.yaml`), `Ageing/AgeingBuckets`,
+  `Credit/` (`ExternalCreditProviderInterface`, default `InternalCreditProvider`,
+  `CreditPositionResolver`: fail closed when the provider throws).
 - `Fixture/TradeCreditFixture` (demo).
 - Tests: `tests/Functional/TradeCreditTestTrait` builds carts and orders through the real
   checkout state machine in the rolled-back transaction (own zone, shipping and payment
