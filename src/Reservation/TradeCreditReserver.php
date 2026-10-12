@@ -186,6 +186,12 @@ final class TradeCreditReserver
         return $closed;
     }
 
+    /** Committed amount as stored (the entity may be stale within a request). */
+    public function committedAmount(TradeCreditAccountInterface $account): int
+    {
+        return (int) $this->connection()->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]);
+    }
+
     /** Sets the committed amount of an account (recalculation command), with an adjustment entry. */
     public function adjust(TradeCreditAccountInterface $account, int $committedAmount, string $reason): void
     {

@@ -44,10 +44,11 @@ final class RecalculateCommand extends Command
         $rows = [];
         foreach ($this->accountRepository->findAll() as $account) {
             $expected = $reserved[(int) $account->getId()] ?? 0;
-            if ($expected === $account->getCommittedAmount()) {
+            $committed = $this->reserver->committedAmount($account);
+            if ($expected === $committed) {
                 continue;
             }
-            $rows[] = [(string) $account->getId(), sprintf('%s:%s', (string) $account->getOwnerType(), (string) $account->getOwnerIdentifier()), $account->getCommittedAmount(), $expected];
+            $rows[] = [(string) $account->getId(), sprintf('%s:%s', (string) $account->getOwnerType(), (string) $account->getOwnerIdentifier()), $committed, $expected];
             if ($apply) {
                 $this->reserver->adjust($account, $expected, 'recalculate');
             }
