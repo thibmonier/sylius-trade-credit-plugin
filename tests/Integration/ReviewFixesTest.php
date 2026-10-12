@@ -90,7 +90,8 @@ final class ReviewFixesTest extends KernelTestCase
         $cart = $this->order('shipping_selected', null, $customer);
         $payment = $cart->getLastPayment(PaymentInterface::STATE_CART);
         self::assertNotNull($payment);
-        self::assertNotNull($this->checker()->getIneligibility($method, $payment));
+        // The signed-in customer is told the method is unavailable, not that they have no account.
+        self::assertSame('tmonier_trade_credit.payment_method.unavailable', $this->checker()->getIneligibility($method, $payment)?->getMessage());
 
         // The open item is still settled when paid.
         $orderPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);

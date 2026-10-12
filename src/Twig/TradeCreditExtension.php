@@ -62,12 +62,14 @@ final class TradeCreditExtension extends AbstractExtension
     /** @return list<OrderPaymentTermsInterface> */
     public function openItems(TradeCreditAccountInterface $account): array
     {
-        return $this->termsRepository->findOpenByAccount($account);
+        return [...$this->termsRepository->findOpenByAccount($account), ...$this->termsRepository->findLeftUnpaidOverdueByAccount($account, $this->clock->now())];
     }
 
     public function isOverdue(OrderPaymentTermsInterface $terms): bool
     {
-        return $terms->isOverdue($this->clock->now());
+        $now = $this->clock->now();
+
+        return $terms->isOverdue($now) || (OrderPaymentTermsInterface::STATE_RELEASED === $terms->getState() && $this->termsRepository->isLeftUnpaidOverdue($terms, $now));
     }
 
     /**

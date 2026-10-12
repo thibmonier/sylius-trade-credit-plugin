@@ -11,6 +11,7 @@ use Doctrine\ORM\EntityManagerInterface;
 use Psr\Clock\ClockInterface;
 use Psr\Log\LoggerInterface;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\Model\PaymentInterface as CorePaymentInterface;
 use Sylius\Component\Core\OrderCheckoutStates;
 use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Symfony\Component\Uid\Uuid;
@@ -220,12 +221,6 @@ final class TradeCreditReserver
         return $closed;
     }
 
-    /** Committed amount as stored (the entity may be stale within a request). */
-    public function committedAmount(TradeCreditAccountInterface $account): int
-    {
-        return $this->toInt($this->connection()->fetchOne(sprintf('SELECT committed_amount FROM %s WHERE id = ?', $this->table($this->accountClass)), [$account->getId()]));
-    }
-
     /**
      * Committed amount and sum of the open reservations of the account, read in one statement;
      * with `$apply`, under the account lock, the committed amount is set to the sum (adjustment
@@ -301,6 +296,52 @@ final class TradeCreditReserver
             if ($order instanceof OrderInterface) {
                 $this->close($order, OrderPaymentTermsInterface::STATE_RELEASED, self::REASON_STALE);
             }
+        }
+
+        return $orders;
+    }
+
+    /**
+     * Open reservations, older than an hour, of placed orders whose current payment has another
+     * method (a method switch whose save failed after the reservation was committed): order
+     * numbers, reserved again for the current method when it is payment on account (same
+     * terms), else released, with `$apply`.
+     *
+     * @return list<string>
+     */
+    public function mismatchedReservations(bool $apply): array
+    {
+        $payments = $this->entityManager->getClassMetadata(CorePaymentInterface::class)->getTableName();
+        /** @var list<array{order_id: int|string, number: string|null}> $rows */
+        $rows = $this->connection()->fetchAllAssociative(
+            sprintf(
+                'SELECT t.order_id, o.number FROM %1$s t INNER JOIN %2$s o ON o.id = t.order_id INNER JOIN %3$s p ON p.id = (SELECT MAX(lp.id) FROM %3$s lp WHERE lp.order_id = t.order_id) WHERE t.state = ? AND t.created_at < ? AND o.checkout_state = ? AND o.state = ? AND (p.method_id IS NULL OR p.method_id <> t.payment_method_id)',
+                $this->table($this->termsClass),
+                $this->entityManager->getClassMetadata(OrderInterface::class)->getTableName(),
+                $payments,
+            ),
+            [OrderPaymentTermsInterface::STATE_RESERVED, $this->clock->now()->modify('-1 hour'), OrderCheckoutStates::STATE_COMPLETED, OrderInterface::STATE_NEW],
+            [1 => Types::DATETIME_IMMUTABLE],
+        );
+
+        $orders = [];
+        foreach ($rows as $row) {
+            $orders[] = (string) ($row['number'] ?? $row['order_id']);
+            $order = $apply ? $this->entityManager->find(OrderInterface::class, $row['order_id']) : null;
+            if (!$order instanceof OrderInterface) {
+                continue;
+            }
+            $method = $order->getLastPayment()?->getMethod();
+            if (null !== $method && $this->policyProvider->isOnAccount($method)) {
+                try {
+                    $this->reserve($order, $method);
+
+                    continue;
+                } catch (TradeCreditReservationException $exception) {
+                    $this->logger->warning(sprintf('Trade credit of order #%s cannot be reserved for its payment method: %s', (string) $order->getNumber(), $exception->getMessage()));
+                }
+            }
+            $this->close($order, OrderPaymentTermsInterface::STATE_RELEASED, self::REASON_PAYMENT_METHOD_CHANGED);
         }
 
         return $orders;

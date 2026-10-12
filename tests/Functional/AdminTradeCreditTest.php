@@ -186,4 +186,32 @@ final class AdminTradeCreditTest extends WebTestCase
         self::assertInstanceOf(PaymentTermsPolicyInterface::class, $policy, 'Not deleted');
         self::assertSame($method->getId(), $policy->getPaymentMethod()?->getId(), 'Still the method of its open items');
     }
+
+    public function testAnOrderLeftUnpaidAfterItsDueDateIsListedAsOverdue(): void
+    {
+        $method = $this->onAccountMethod();
+        $bankTransfer = $this->paymentMethod('Bank transfer');
+        $customer = $this->customer();
+        $this->account($customer);
+        $left = $this->order('completed', $method, $customer);
+        $this->connection()->executeStatement('UPDATE tmonier_trade_credit_order_terms SET due_date = ? WHERE order_id = ?', [(new \DateTimeImmutable('-3 days'))->format('Y-m-d'), $left->getId()]);
+        $payment = $left->getLastPayment(PaymentInterface::STATE_NEW);
+        self::assertNotNull($payment);
+        $payment->setMethod($bankTransfer);
+        $this->entityManager()->flush();
+        $markAsPaid = sprintf('[data-test-tmonier-mark-as-paid="%s"]', (string) $left->getNumber());
+
+        foreach (['/admin/trade-credit/open-items', '/admin/trade-credit/open-items?criteria[overdue]=true'] as $uri) {
+            $crawler = $this->client->request('GET', $uri);
+            self::assertResponseIsSuccessful();
+            self::assertCount(1, $crawler->filter($markAsPaid), $uri);
+        }
+        $crawler = $this->client->request('GET', '/admin/trade-credit/open-items?criteria[overdue]=false');
+        self::assertCount(0, $crawler->filter($markAsPaid));
+
+        $crawler = $this->client->request('GET', '/admin/trade-credit/open-items?criteria[overdue]=true');
+        $this->client->submit($crawler->filter($markAsPaid)->form());
+        self::assertResponseRedirects('/admin/trade-credit/open-items');
+        self::assertSame('completed', $this->connection()->fetchOne('SELECT state FROM sylius_payment WHERE order_id = ? ORDER BY id DESC', [$left->getId()]));
+    }
 }

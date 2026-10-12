@@ -50,9 +50,12 @@ final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityChe
 
         // A disabled policy turns the method off, it does not make it a plain Offline method.
         $order = $payment instanceof CorePaymentInterface ? $payment->getOrder() : null;
-        if (!$policy->isEnabled() || !$order instanceof OrderInterface || !$this->orderOwnerChecker->isPlacedByItsCustomer($order)) {
+        if (!$order instanceof OrderInterface || !$this->orderOwnerChecker->isPlacedByItsCustomer($order)) {
             // Generic refusal: nothing about the account of the customer whose e-mail a guest typed.
             return new PaymentMethodIneligibility(IneligibilityReason::Restricted, 'tmonier_trade_credit.payment_method.no_account');
+        }
+        if (!$policy->isEnabled()) {
+            return new PaymentMethodIneligibility(IneligibilityReason::Restricted, 'tmonier_trade_credit.payment_method.unavailable');
         }
 
         $reserved = null === $order->getId() ? null : $this->termsRepository->findReservedForOrder($order);

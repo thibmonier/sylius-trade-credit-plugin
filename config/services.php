@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Sylius\Bundle\GridBundle\Form\Type\Filter\BooleanFilterType;
+use Sylius\Bundle\GridBundle\Form\Type\Filter\SelectFilterType;
 use Tmonier\SyliusTradeCreditPlugin\Account\BusinessCustomerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\OrderOwnerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
@@ -22,6 +23,7 @@ use Tmonier\SyliusTradeCreditPlugin\Fixture\TradeCreditFixture;
 use Tmonier\SyliusTradeCreditPlugin\Form\Type\PaymentTermsPolicyType;
 use Tmonier\SyliusTradeCreditPlugin\Form\Type\TradeCreditAccountType;
 use Tmonier\SyliusTradeCreditPlugin\Grid\Filter\OverdueFilter;
+use Tmonier\SyliusTradeCreditPlugin\Grid\Filter\TermsStateFilter;
 use Tmonier\SyliusTradeCreditPlugin\Menu\AccountMenuListener;
 use Tmonier\SyliusTradeCreditPlugin\Menu\AdminMenuListener;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\LostReservationCancellationExclusion;
@@ -258,6 +260,7 @@ return static function (ContainerConfigurator $container): void {
             service('doctrine.orm.entity_manager'),
             service('security.csrf.token_manager'),
             service('router'),
+            service('clock'),
         ])
         ->public()
         ->tag('controller.service_arguments')
@@ -265,8 +268,14 @@ return static function (ContainerConfigurator $container): void {
 
     $services
         ->set('tmonier_trade_credit.grid_filter.overdue', OverdueFilter::class)
-        ->args([service('clock')])
+        ->args([service('clock'), service('tmonier_trade_credit.repository.order_payment_terms')])
         ->tag('sylius.grid_filter', ['type' => 'tmonier_trade_credit_overdue', 'form_type' => BooleanFilterType::class])
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.grid_filter.terms_state', TermsStateFilter::class)
+        ->args([service('tmonier_trade_credit.repository.order_payment_terms'), service('clock')])
+        ->tag('sylius.grid_filter', ['type' => 'tmonier_trade_credit_terms_state', 'form_type' => SelectFilterType::class])
     ;
 
     $services

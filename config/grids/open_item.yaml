@@ -56,7 +56,7 @@ sylius_grid:
                     options:
                         fields: [ord.number, customer.email]
                 state:
-                    type: select
+                    type: tmonier_trade_credit_terms_state
                     label: sylius.ui.state
                     default_value: reserved
                     form_options:

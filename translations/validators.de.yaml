@@ -2,6 +2,7 @@ tmonier_trade_credit:
     payment_method:
         no_account: 'Die Zahlungsart %paymentMethodName% erfordert ein Rechnungskauf-Konto.'
         company_required: 'Die Zahlungsart %paymentMethodName% ist Unternehmen vorbehalten: Geben Sie einen Firmennamen in der Rechnungsadresse an.'
+        unavailable: 'Die Zahlungsart %paymentMethodName% ist derzeit nicht verfügbar.'
         credit_hold: 'Die Zahlungsart %paymentMethodName% ist für Ihr Konto ausgesetzt.'
         overdue: 'Die Zahlungsart %paymentMethodName% ist ausgesetzt, solange Rechnungen überfällig sind.'
         limit_exceeded: 'Die Bestellsumme übersteigt den für %paymentMethodName% verfügbaren Kredit (%available%).'

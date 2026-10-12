@@ -2,6 +2,7 @@ tmonier_trade_credit:
     payment_method:
         no_account: 'The payment method %paymentMethodName% requires a trade credit account.'
         company_required: 'The payment method %paymentMethodName% is reserved to businesses: enter a company name in the billing address.'
+        unavailable: 'The payment method %paymentMethodName% is currently unavailable.'
         credit_hold: 'The payment method %paymentMethodName% is suspended for your account.'
         overdue: 'The payment method %paymentMethodName% is suspended while invoices are overdue.'
         limit_exceeded: 'The order total exceeds the credit available for %paymentMethodName% (%available%).'

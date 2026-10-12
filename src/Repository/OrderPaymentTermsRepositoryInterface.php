@@ -24,14 +24,21 @@ interface OrderPaymentTermsRepositoryInterface extends RepositoryInterface
 
     public function countReservedForPaymentMethod(PaymentMethodInterface $paymentMethod): int;
 
+    /** A reserved item past its due date, or an order left unpaid after leaving payment on account (see below). */
     public function hasOverdue(TradeCreditAccountInterface $account, \DateTimeInterface $today): bool;
 
     /**
-     * Sum of the reserved amounts, per account id.
+     * Overdue items of orders that left payment on account (method switched, payment failed or
+     * cancelled) and are still unpaid: their latest terms, released, past their due date.
      *
-     * @return array<int, int>
+     * @return list<OrderPaymentTermsInterface>
      */
-    public function sumReservedByAccount(): array;
+    public function findLeftUnpaidOverdueByAccount(TradeCreditAccountInterface $account, \DateTimeInterface $today): array;
+
+    /** @return list<string> ids of the terms of `findLeftUnpaidOverdueByAccount()`, all accounts */
+    public function findLeftUnpaidOverdueIds(\DateTimeInterface $today): array;
+
+    public function isLeftUnpaidOverdue(OrderPaymentTermsInterface $terms, \DateTimeInterface $today): bool;
 
     /** Admin open items grid. */
     public function createOpenItemsQueryBuilder(): QueryBuilder;

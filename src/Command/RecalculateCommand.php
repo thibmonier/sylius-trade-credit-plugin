@@ -15,9 +15,11 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 
 /**
  * Drift detection: the committed amount of each account must equal the sum of its open
- * reservations, and open reservations must belong to placed orders. Dry run by default;
- * `--apply` releases the stale reservations and sets each drifted committed amount under the
- * account lock (no race with live reservations), with an adjustment ledger entry.
+ * reservations, and open reservations must belong to placed orders and match the method of
+ * their payment. Dry run by default; `--apply` releases the stale reservations, reserves the
+ * mismatched ones again for the current method (or releases them) and sets each drifted
+ * committed amount under the account lock (no race with live reservations), with an
+ * adjustment ledger entry.
  */
 #[AsCommand(name: 'tmonier:trade-credit:recalculate', description: 'Compare committed amounts with the open items of each trade credit account (dry run unless --apply)')]
 final class RecalculateCommand extends Command
@@ -43,6 +45,10 @@ final class RecalculateCommand extends Command
         if ([] !== $stale) {
             $io->warning(sprintf('%s reservation(s) of orders that are not placed (or cancelled): %s', $apply ? 'Released' : 'Found', implode(', ', $stale)));
         }
+        $mismatched = $this->reserver->mismatchedReservations($apply);
+        if ([] !== $mismatched) {
+            $io->warning(sprintf('%s reservation(s) made for another method than the payment of the order: %s', $apply ? 'Reserved again or released' : 'Found', implode(', ', $mismatched)));
+        }
 
         $rows = [];
         foreach ($this->accountRepository->findAll() as $account) {
@@ -52,7 +58,7 @@ final class RecalculateCommand extends Command
             }
         }
 
-        if ([] === $rows && [] === $stale) {
+        if ([] === $rows && [] === $stale && [] === $mismatched) {
             $io->success('No drift: every committed amount matches the open items.');
 
             return Command::SUCCESS;

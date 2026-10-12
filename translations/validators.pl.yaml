@@ -2,6 +2,7 @@ tmonier_trade_credit:
     payment_method:
         no_account: 'Metoda płatności %paymentMethodName% wymaga konta kredytu kupieckiego.'
         company_required: 'Metoda płatności %paymentMethodName% jest dostępna tylko dla firm: podaj nazwę firmy w adresie rozliczeniowym.'
+        unavailable: 'Metoda płatności %paymentMethodName% jest obecnie niedostępna.'
         credit_hold: 'Metoda płatności %paymentMethodName% jest zawieszona dla Twojego konta.'
         overdue: 'Metoda płatności %paymentMethodName% jest wstrzymana z powodu zaległych faktur.'
         limit_exceeded: 'Wartość zamówienia przekracza kredyt dostępny dla %paymentMethodName% (%available%).'

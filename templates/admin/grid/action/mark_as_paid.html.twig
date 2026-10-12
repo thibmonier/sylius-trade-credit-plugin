@@ -1,4 +1,4 @@
-{% if data.reserved %}
+{% if data.reserved or tmonier_trade_credit_is_overdue(data) %}
     <form action="{{ path('tmonier_trade_credit_admin_open_item_mark_as_paid', {'id': data.id}) }}" method="post" class="d-inline" {{ sylius_test_html_attribute('tmonier-mark-as-paid', data.order.number) }}>
         <input type="hidden" name="_csrf_token" value="{{ csrf_token('tmonier_trade_credit_mark_as_paid' ~ data.id) }}">
         <button class="btn btn-sm btn-success" type="submit" onclick="return confirm('{{ 'tmonier_trade_credit.ui.mark_as_paid_confirm'|trans|e('js') }}');">

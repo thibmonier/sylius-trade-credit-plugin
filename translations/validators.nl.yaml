@@ -2,6 +2,7 @@ tmonier_trade_credit:
     payment_method:
         no_account: 'De betaalmethode %paymentMethodName% vereist een handelskredietrekening.'
         company_required: 'De betaalmethode %paymentMethodName% is voorbehouden aan bedrijven: vul een bedrijfsnaam in het factuuradres in.'
+        unavailable: 'De betaalmethode %paymentMethodName% is momenteel niet beschikbaar.'
         credit_hold: 'De betaalmethode %paymentMethodName% is opgeschort voor uw account.'
         overdue: 'De betaalmethode %paymentMethodName% is opgeschort zolang er facturen vervallen zijn.'
         limit_exceeded: 'Het besteltotaal overschrijdt het beschikbare krediet voor %paymentMethodName% (%available%).'

@@ -2,6 +2,7 @@ tmonier_trade_credit:
     payment_method:
         no_account: 'Le moyen de paiement %paymentMethodName% nécessite un compte de paiement à terme.'
         company_required: 'Le moyen de paiement %paymentMethodName% est réservé aux professionnels : indiquez une raison sociale dans l''adresse de facturation.'
+        unavailable: 'Le moyen de paiement %paymentMethodName% est momentanément indisponible.'
         credit_hold: 'Le moyen de paiement %paymentMethodName% est suspendu pour votre compte.'
         overdue: 'Le moyen de paiement %paymentMethodName% est suspendu tant que des factures sont échues.'
         limit_exceeded: 'Le total de la commande dépasse l''encours disponible pour %paymentMethodName% (%available%).'

@@ -36,7 +36,9 @@ final class StatementBuilder
 
         $today = $this->clock->now();
         $items = [];
-        foreach ($this->termsRepository->findOpenByAccount($account) as $terms) {
+        // Open items, then orders that left payment on account and are unpaid after their due date.
+        $leftUnpaid = $this->termsRepository->findLeftUnpaidOverdueByAccount($account, $today);
+        foreach ([...$this->termsRepository->findOpenByAccount($account), ...$leftUnpaid] as $terms) {
             $order = $terms->getOrder();
             if (!$order instanceof OrderInterface) {
                 continue;
@@ -49,7 +51,7 @@ final class StatementBuilder
                 $terms->getAmount(),
                 \DateTimeImmutable::createFromInterface($order->getCheckoutCompletedAt() ?? $terms->getCreatedAt()),
                 $terms->getDueDate(),
-                $terms->isOverdue($today),
+                $terms->isOverdue($today) || in_array($terms, $leftUnpaid, true),
                 $placedByViewer ? $this->invoiceUrl($order) : null,
                 $placedByViewer,
                 $placedByViewer ? null : $order->getCustomer()?->getFullName(),

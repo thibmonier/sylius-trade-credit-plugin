@@ -16,10 +16,11 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
  * Symfony Workflow listeners (never guards: guards run on every `can()`):
  * - `sylius_order_checkout` transition `complete` (before the marking changes): reserve the
  *   order total when the payment is on account; a refusal aborts the completion;
- * - `sylius_payment` completed `complete`: settle (paid);
+ * - `sylius_payment` completed `complete`: settle (paid), whatever the method of the reservation
+ *   (the order is paid; also heals a reservation whose method switch was not saved);
  * - `sylius_payment` completed `fail` / `cancel` (before the core reprocesses the order and
  *   creates the next payment) and `sylius_order` completed `cancel`: release.
- * Closing is driven by the open reservation of the order (made for the payment method), never
+ * Releasing is driven by the open reservation of the order (made for the payment method), never
  * by the current state of the payment terms policy.
  * Settling and releasing are idempotent (see `TradeCreditReserver`).
  */
@@ -54,7 +55,7 @@ final class TradeCreditWorkflowListener
 
     public function onPaymentCompleted(Event $event): void
     {
-        $this->closeForPayment($event, OrderPaymentTermsInterface::STATE_SETTLED, TradeCreditReserver::REASON_PAID);
+        $this->closeForPayment($event, OrderPaymentTermsInterface::STATE_SETTLED, TradeCreditReserver::REASON_PAID, false);
     }
 
     public function onPaymentFailed(Event $event): void
@@ -75,7 +76,7 @@ final class TradeCreditWorkflowListener
         }
     }
 
-    private function closeForPayment(Event $event, string $state, string $reason): void
+    private function closeForPayment(Event $event, string $state, string $reason, bool $sameMethodOnly = true): void
     {
         $payment = $event->getSubject();
         $paymentMethod = $payment instanceof PaymentInterface ? $payment->getMethod() : null;
@@ -86,7 +87,7 @@ final class TradeCreditWorkflowListener
         // Driven by the reservation made for this payment method, whatever the policy is now.
         $order = $payment->getOrder();
         if ($order instanceof OrderInterface) {
-            $this->reserver->close($order, $state, $reason, true, $paymentMethod);
+            $this->reserver->close($order, $state, $reason, true, $sameMethodOnly ? $paymentMethod : null);
         }
     }
 }

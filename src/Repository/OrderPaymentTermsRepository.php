@@ -78,50 +78,92 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
         ;
     }
 
-    /**
-     * An open item past its due date, or an order that left payment on account (switched to
-     * another method, payment failed or cancelled) and is still unpaid after the due date of its
-     * terms: switching methods never clears an overdue item.
-     */
     public function hasOverdue(TradeCreditAccountInterface $account, \DateTimeInterface $today): bool
     {
-        return null !== $this->createQueryBuilder('t')
+        $reserved = $this->createQueryBuilder('t')
             ->select('t.id')
-            ->innerJoin('t.order', 'o')
             ->andWhere('t.account = :account')
+            ->andWhere('t.state = :state')
             ->andWhere('t.dueDate < :today')
-            ->andWhere('t.state = :reserved OR (t.state = :released AND t.closingReason IN (:lostReasons) AND o.state = :orderNew AND o.paymentState NOT IN (:paidStates))')
             ->setParameter('account', $account)
-            ->setParameter('reserved', OrderPaymentTermsInterface::STATE_RESERVED)
-            ->setParameter('released', OrderPaymentTermsInterface::STATE_RELEASED)
-            ->setParameter('lostReasons', TradeCreditReserver::LOST_RESERVATION_REASONS)
-            ->setParameter('orderNew', OrderInterface::STATE_NEW)
-            ->setParameter('paidStates', [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED])
-            ->setParameter('today', \DateTimeImmutable::createFromInterface($today)->setTime(0, 0), 'date_immutable')
+            ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
+            ->setParameter('today', self::day($today), 'date_immutable')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult()
         ;
+
+        return null !== $reserved || [] !== $this->createLeftUnpaidQueryBuilder($today)
+            ->andWhere('t.account = :account')
+            ->setParameter('account', $account)
+            ->setMaxResults(1)
+            ->getQuery()
+            ->getResult()
+        ;
     }
 
-    public function sumReservedByAccount(): array
+    public function findLeftUnpaidOverdueByAccount(TradeCreditAccountInterface $account, \DateTimeInterface $today): array
     {
-        /** @var list<array{accountId: int|string, total: int|string|null}> $rows */
-        $rows = $this->createQueryBuilder('t')
-            ->select('IDENTITY(t.account) AS accountId', 'SUM(t.amount) AS total')
-            ->andWhere('t.state = :state')
-            ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
-            ->groupBy('t.account')
+        /** @var list<OrderPaymentTermsInterface> $terms */
+        $terms = $this->createLeftUnpaidQueryBuilder($today)
+            ->andWhere('t.account = :account')
+            ->setParameter('account', $account)
+            ->addOrderBy('t.dueDate', 'ASC')
             ->getQuery()
-            ->getArrayResult()
+            ->getResult()
         ;
 
-        $sums = [];
-        foreach ($rows as $row) {
-            $sums[(int) $row['accountId']] = (int) $row['total'];
-        }
+        return $terms;
+    }
 
-        return $sums;
+    public function findLeftUnpaidOverdueIds(\DateTimeInterface $today): array
+    {
+        /** @var list<string> $ids */
+        $ids = array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $this->createLeftUnpaidQueryBuilder($today)
+            ->select('t.id')
+            ->getQuery()
+            ->getSingleColumnResult());
+
+        return $ids;
+    }
+
+    public function isLeftUnpaidOverdue(OrderPaymentTermsInterface $terms, \DateTimeInterface $today): bool
+    {
+        return [] !== $this->createLeftUnpaidQueryBuilder($today)
+            ->andWhere('t.id = :id')
+            ->setParameter('id', $terms->getId())
+            ->getQuery()
+            ->getResult()
+        ;
+    }
+
+    /**
+     * Terms released because the order left payment on account (switched to another method,
+     * payment failed or cancelled), still the latest terms of the order (no reservation since),
+     * order not cancelled and unpaid, due date passed: switching methods never clears an overdue
+     * item.
+     */
+    private function createLeftUnpaidQueryBuilder(\DateTimeInterface $today): QueryBuilder
+    {
+        return $this->createQueryBuilder('t')
+            ->innerJoin('t.order', 'o')
+            ->andWhere('t.state = :released')
+            ->andWhere('t.closingReason IN (:lostReasons)')
+            ->andWhere('t.dueDate < :today')
+            ->andWhere('o.state = :orderNew')
+            ->andWhere('o.paymentState NOT IN (:paidStates)')
+            ->andWhere(sprintf('NOT EXISTS (SELECT later.id FROM %s later WHERE later.order = t.order AND later.id > t.id)', $this->getEntityName()))
+            ->setParameter('released', OrderPaymentTermsInterface::STATE_RELEASED)
+            ->setParameter('lostReasons', TradeCreditReserver::LOST_RESERVATION_REASONS)
+            ->setParameter('orderNew', OrderInterface::STATE_NEW)
+            ->setParameter('paidStates', [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED])
+            ->setParameter('today', self::day($today), 'date_immutable')
+        ;
+    }
+
+    private static function day(\DateTimeInterface $today): \DateTimeImmutable
+    {
+        return \DateTimeImmutable::createFromInterface($today)->setTime(0, 0);
     }
 
     public function createOpenItemsQueryBuilder(): QueryBuilder

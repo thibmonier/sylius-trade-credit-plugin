@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Controller\Admin;
 
 use Doctrine\ORM\EntityManagerInterface;
+use Psr\Clock\ClockInterface;
 use Sylius\Abstraction\StateMachine\StateMachineInterface;
 use Sylius\Component\Core\Model\OrderInterface;
 use Sylius\Component\Core\Model\PaymentInterface;
@@ -31,6 +32,7 @@ final class MarkAsPaidController
         private readonly EntityManagerInterface $entityManager,
         private readonly CsrfTokenManagerInterface $csrfTokenManager,
         private readonly UrlGeneratorInterface $urlGenerator,
+        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -50,7 +52,9 @@ final class MarkAsPaidController
         }
 
         $payment = $order->getLastPayment(PaymentInterface::STATE_NEW) ?? $order->getLastPayment(PaymentInterface::STATE_PROCESSING);
-        if (!$terms->isReserved() || null === $payment || !$this->stateMachine->can($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE)) {
+        // An open item, or an order that left payment on account and is overdue (paid by transfer).
+        $payable = $terms->isReserved() || $this->termsRepository->isLeftUnpaidOverdue($terms, $this->clock->now());
+        if (!$payable || null === $payment || !$this->stateMachine->can($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE)) {
             $this->flash($request, 'error', 'tmonier_trade_credit.flash.cannot_mark_as_paid');
 
             return $redirect;
