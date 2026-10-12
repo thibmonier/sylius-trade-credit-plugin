@@ -1,0 +1,19 @@
+tmonier_trade_credit:
+    payment_method:
+        no_account: 'Il metodo di pagamento %paymentMethodName% richiede un conto di credito commerciale.'
+        company_required: 'Il metodo di pagamento %paymentMethodName% è riservato alle aziende: indichi una ragione sociale nell''indirizzo di fatturazione.'
+        credit_hold: 'Il metodo di pagamento %paymentMethodName% è sospeso per il suo conto.'
+        overdue: 'Il metodo di pagamento %paymentMethodName% è sospeso finché ci sono fatture scadute.'
+        limit_exceeded: 'Il totale dell''ordine supera il credito disponibile per %paymentMethodName% (%available%).'
+    payment_entry:
+        on_account: 'Questo ordine è pagato a credito: lo paghi con bonifico entro il %due_date%.'
+    reservation:
+        no_account: 'Il pagamento a credito non è disponibile per questo ordine.'
+        currency: 'Il pagamento a credito è disponibile solo nella valuta del suo conto.'
+        overdue: 'Il pagamento a credito è sospeso finché ci sono fatture scadute.'
+        credit_hold: 'Il pagamento a credito è sospeso per il suo conto.'
+        limit_exceeded: 'Il totale dell''ordine supera il credito disponibile: scelga un altro metodo di pagamento.'
+    account:
+        unique: 'Questo titolare ha già un conto di credito.'
+    payment_terms_policy:
+        unique: 'Questo metodo di pagamento ha già condizioni di pagamento.'

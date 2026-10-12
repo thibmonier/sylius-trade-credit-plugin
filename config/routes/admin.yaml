@@ -1,0 +1,91 @@
+tmonier_trade_credit_admin_account:
+    resource: |
+        alias: tmonier_trade_credit.account
+        section: admin
+        templates: "@SyliusAdmin\\shared\\crud"
+        only: ['index', 'update', 'delete']
+        redirect: update
+        grid: tmonier_trade_credit_admin_account
+        form:
+            type: Tmonier\SyliusTradeCreditPlugin\Form\Type\TradeCreditAccountType
+        permission: true
+        path: trade-credit/accounts
+        vars:
+            all:
+                hook_prefix: tmonier_trade_credit_admin.account
+    type: sylius.resource
+
+# "Open a trade credit account" from the customer page.
+tmonier_trade_credit_admin_account_create_for_customer:
+    path: /trade-credit/accounts/new/customer/{customerId}
+    methods: [GET, POST]
+    requirements:
+        customerId: '\d+'
+    defaults:
+        _controller: tmonier_trade_credit.controller.account::createAction
+        _sylius:
+            section: admin
+            permission: true
+            template: "@SyliusAdmin/shared/crud/create.html.twig"
+            form: Tmonier\SyliusTradeCreditPlugin\Form\Type\TradeCreditAccountType
+            vars:
+                hook_prefix: tmonier_trade_credit_admin.account
+            factory:
+                method: createForCustomer
+                arguments: [$customerId]
+            redirect:
+                route: sylius_admin_customer_show
+                parameters: { id: $customerId }
+
+tmonier_trade_credit_admin_account_ledger:
+    path: /trade-credit/accounts/{accountId}/ledger
+    methods: [GET]
+    requirements:
+        accountId: '\d+'
+    defaults:
+        _controller: tmonier_trade_credit.controller.ledger_entry::indexAction
+        _sylius:
+            section: admin
+            permission: true
+            grid: tmonier_trade_credit_admin_ledger_entry
+            template: "@SyliusAdmin/shared/crud/index.html.twig"
+            vars:
+                hook_prefix: tmonier_trade_credit_admin.ledger_entry
+
+tmonier_trade_credit_admin_payment_terms_policy:
+    resource: |
+        alias: tmonier_trade_credit.payment_terms_policy
+        section: admin
+        templates: "@SyliusAdmin\\shared\\crud"
+        except: ['show']
+        redirect: index
+        grid: tmonier_trade_credit_admin_payment_terms_policy
+        form:
+            type: Tmonier\SyliusTradeCreditPlugin\Form\Type\PaymentTermsPolicyType
+        permission: true
+        path: trade-credit/payment-terms-policies
+        vars:
+            all:
+                hook_prefix: tmonier_trade_credit_admin.payment_terms_policy
+    type: sylius.resource
+
+tmonier_trade_credit_admin_open_item_index:
+    path: /trade-credit/open-items
+    methods: [GET]
+    defaults:
+        _controller: tmonier_trade_credit.controller.order_payment_terms::indexAction
+        _sylius:
+            section: admin
+            permission: true
+            grid: tmonier_trade_credit_admin_open_item
+            template: "@SyliusAdmin/shared/crud/index.html.twig"
+            vars:
+                hook_prefix: tmonier_trade_credit_admin.open_item
+
+tmonier_trade_credit_admin_open_item_mark_as_paid:
+    path: /trade-credit/open-items/{id}/mark-as-paid
+    methods: [POST]
+    requirements:
+        id: '[0-9a-fA-F-]{36}'
+    defaults:
+        _controller: tmonier_trade_credit.controller.admin.mark_as_paid

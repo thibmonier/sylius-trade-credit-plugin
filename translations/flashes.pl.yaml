@@ -1,0 +1,12 @@
+tmonier_trade_credit:
+    flash:
+        marked_as_paid: 'Zamówienie oznaczono jako opłacone.'
+        cannot_mark_as_paid: 'Nie można oznaczyć zamówienia jako opłaconego (brak oczekującej płatności lub już opłacone).'
+    payment_entry:
+        on_account: 'To zamówienie jest płatne z odroczonym terminem: zapłać przelewem przed %due_date%.'
+    reservation:
+        no_account: 'Płatność z odroczonym terminem jest niedostępna dla tego zamówienia.'
+        currency: 'Płatność z odroczonym terminem jest dostępna tylko w walucie konta.'
+        overdue: 'Płatność z odroczonym terminem jest wstrzymana z powodu zaległych faktur.'
+        credit_hold: 'Płatność z odroczonym terminem jest zawieszona dla Twojego konta.'
+        limit_exceeded: 'Wartość zamówienia przekracza dostępny kredyt: wybierz inną metodę płatności.'

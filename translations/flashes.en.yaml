@@ -1,0 +1,12 @@
+tmonier_trade_credit:
+    flash:
+        marked_as_paid: 'The order has been marked as paid.'
+        cannot_mark_as_paid: 'This order cannot be marked as paid (no pending payment or already paid).'
+    payment_entry:
+        on_account: 'This order is paid on account: please pay it by bank transfer before %due_date%.'
+    reservation:
+        no_account: 'Payment on account is not available for this order.'
+        currency: 'Payment on account is only available in the currency of your trade credit account.'
+        overdue: 'Payment on account is suspended while invoices are overdue.'
+        credit_hold: 'Payment on account is suspended for your account.'
+        limit_exceeded: 'The order total exceeds your available credit: choose another payment method.'

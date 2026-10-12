@@ -1,0 +1,19 @@
+tmonier_trade_credit:
+    payment_method:
+        no_account: 'The payment method %paymentMethodName% requires a trade credit account.'
+        company_required: 'The payment method %paymentMethodName% is reserved to businesses: enter a company name in the billing address.'
+        credit_hold: 'The payment method %paymentMethodName% is suspended for your account.'
+        overdue: 'The payment method %paymentMethodName% is suspended while invoices are overdue.'
+        limit_exceeded: 'The order total exceeds the credit available for %paymentMethodName% (%available%).'
+    payment_entry:
+        on_account: 'This order is paid on account: please pay it by bank transfer before %due_date%.'
+    reservation:
+        no_account: 'Payment on account is not available for this order.'
+        currency: 'Payment on account is only available in the currency of your trade credit account.'
+        overdue: 'Payment on account is suspended while invoices are overdue.'
+        credit_hold: 'Payment on account is suspended for your account.'
+        limit_exceeded: 'The order total exceeds your available credit: choose another payment method.'
+    account:
+        unique: 'This owner already has a trade credit account.'
+    payment_terms_policy:
+        unique: 'This payment method already has payment terms.'

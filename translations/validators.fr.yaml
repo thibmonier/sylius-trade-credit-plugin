@@ -1,0 +1,19 @@
+tmonier_trade_credit:
+    payment_method:
+        no_account: 'Le moyen de paiement %paymentMethodName% nécessite un compte de paiement à terme.'
+        company_required: 'Le moyen de paiement %paymentMethodName% est réservé aux professionnels : indiquez une raison sociale dans l''adresse de facturation.'
+        credit_hold: 'Le moyen de paiement %paymentMethodName% est suspendu pour votre compte.'
+        overdue: 'Le moyen de paiement %paymentMethodName% est suspendu tant que des factures sont échues.'
+        limit_exceeded: 'Le total de la commande dépasse l''encours disponible pour %paymentMethodName% (%available%).'
+    payment_entry:
+        on_account: 'Cette commande est payée à terme : merci de la régler par virement avant le %due_date%.'
+    reservation:
+        no_account: 'Le paiement à terme n''est pas disponible pour cette commande.'
+        currency: 'Le paiement à terme n''est disponible que dans la devise de votre compte.'
+        overdue: 'Le paiement à terme est suspendu tant que des factures sont échues.'
+        credit_hold: 'Le paiement à terme est suspendu pour votre compte.'
+        limit_exceeded: 'Le total de la commande dépasse votre encours disponible : choisissez un autre moyen de paiement.'
+    account:
+        unique: 'Ce titulaire a déjà un compte de paiement à terme.'
+    payment_terms_policy:
+        unique: 'Ce moyen de paiement a déjà des conditions de paiement.'

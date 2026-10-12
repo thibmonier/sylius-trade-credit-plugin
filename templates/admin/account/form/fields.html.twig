@@ -1,0 +1,30 @@
+{% set form = hookable_metadata.context.form %}
+{% set account = hookable_metadata.context.resource|default(null) %}
+
+{% if account and account.id %}
+    <div class="alert alert-info">
+        {{ 'tmonier_trade_credit.ui.committed'|trans }}: <strong>{{ account.committedAmount|sylius_format_money(account.currencyCode ?? 'USD', app.request.locale) }}</strong>
+        &middot; {{ 'tmonier_trade_credit.ui.available'|trans }}: <strong>{{ account.availableAmount|sylius_format_money(account.currencyCode ?? 'USD', app.request.locale) }}</strong>
+        <div class="small text-secondary">{{ 'tmonier_trade_credit.ui.committed_help'|trans }}</div>
+    </div>
+    {% set warning = tmonier_trade_credit_legal_warning(account) %}
+    {% if warning %}
+        <div class="alert alert-warning" {{ sylius_test_html_attribute('tmonier-legal-warning') }}>{{ warning|trans(tmonier_trade_credit_legal_parameters()) }}</div>
+    {% endif %}
+{% endif %}
+<div class="row">
+    <div class="col-12 col-md-4">{{ form_row(form.creditLimit) }}</div>
+    <div class="col-12 col-md-4">{{ form_row(form.currencyCode) }}</div>
+    <div class="col-12 col-md-4 pt-md-4">{{ form_row(form.enabled) }}</div>
+</div>
+<div class="row">
+    <div class="col-12 col-md-4">{{ form_row(form.creditHold) }}</div>
+    <div class="col-12 col-md-4">{{ form_row(form.allowExceed) }}</div>
+    <div class="col-12 col-md-4">{{ form_row(form.blockWhenOverdue) }}</div>
+</div>
+<div class="row">
+    <div class="col-12 col-md-4">{{ form_row(form.netDays) }}</div>
+    <div class="col-12 col-md-8">{{ form_row(form.endOfMonthMode) }}</div>
+</div>
+{{ form_row(form.note) }}
+<p class="text-secondary small mb-0">{{ 'tmonier_trade_credit.form.legal_help'|trans }}</p>

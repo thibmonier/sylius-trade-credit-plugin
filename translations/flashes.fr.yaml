@@ -1,0 +1,12 @@
+tmonier_trade_credit:
+    flash:
+        marked_as_paid: 'La commande a été marquée payée.'
+        cannot_mark_as_paid: 'Cette commande ne peut pas être marquée payée (aucun paiement en attente ou déjà payée).'
+    payment_entry:
+        on_account: 'Cette commande est payée à terme : merci de la régler par virement avant le %due_date%.'
+    reservation:
+        no_account: 'Le paiement à terme n''est pas disponible pour cette commande.'
+        currency: 'Le paiement à terme n''est disponible que dans la devise de votre compte.'
+        overdue: 'Le paiement à terme est suspendu tant que des factures sont échues.'
+        credit_hold: 'Le paiement à terme est suspendu pour votre compte.'
+        limit_exceeded: 'Le total de la commande dépasse votre encours disponible : choisissez un autre moyen de paiement.'

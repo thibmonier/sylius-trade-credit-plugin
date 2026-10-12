@@ -1,0 +1,19 @@
+tmonier_trade_credit:
+    payment_method:
+        no_account: 'Die Zahlungsart %paymentMethodName% erfordert ein Rechnungskauf-Konto.'
+        company_required: 'Die Zahlungsart %paymentMethodName% ist Unternehmen vorbehalten: Geben Sie einen Firmennamen in der Rechnungsadresse an.'
+        credit_hold: 'Die Zahlungsart %paymentMethodName% ist für Ihr Konto ausgesetzt.'
+        overdue: 'Die Zahlungsart %paymentMethodName% ist ausgesetzt, solange Rechnungen überfällig sind.'
+        limit_exceeded: 'Die Bestellsumme übersteigt den für %paymentMethodName% verfügbaren Kredit (%available%).'
+    payment_entry:
+        on_account: 'Diese Bestellung wird auf Rechnung bezahlt: Bitte überweisen Sie den Betrag vor dem %due_date%.'
+    reservation:
+        no_account: 'Der Kauf auf Rechnung ist für diese Bestellung nicht verfügbar.'
+        currency: 'Der Kauf auf Rechnung ist nur in der Währung Ihres Kontos verfügbar.'
+        overdue: 'Der Kauf auf Rechnung ist ausgesetzt, solange Rechnungen überfällig sind.'
+        credit_hold: 'Der Kauf auf Rechnung ist für Ihr Konto ausgesetzt.'
+        limit_exceeded: 'Die Bestellsumme übersteigt Ihren verfügbaren Kredit: Wählen Sie eine andere Zahlungsart.'
+    account:
+        unique: 'Dieser Inhaber hat bereits ein Rechnungskauf-Konto.'
+    payment_terms_policy:
+        unique: 'Diese Zahlungsart hat bereits Zahlungsbedingungen.'

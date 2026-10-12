@@ -1,0 +1,19 @@
+tmonier_trade_credit:
+    payment_method:
+        no_account: 'Metoda płatności %paymentMethodName% wymaga konta kredytu kupieckiego.'
+        company_required: 'Metoda płatności %paymentMethodName% jest dostępna tylko dla firm: podaj nazwę firmy w adresie rozliczeniowym.'
+        credit_hold: 'Metoda płatności %paymentMethodName% jest zawieszona dla Twojego konta.'
+        overdue: 'Metoda płatności %paymentMethodName% jest wstrzymana z powodu zaległych faktur.'
+        limit_exceeded: 'Wartość zamówienia przekracza kredyt dostępny dla %paymentMethodName% (%available%).'
+    payment_entry:
+        on_account: 'To zamówienie jest płatne z odroczonym terminem: zapłać przelewem przed %due_date%.'
+    reservation:
+        no_account: 'Płatność z odroczonym terminem jest niedostępna dla tego zamówienia.'
+        currency: 'Płatność z odroczonym terminem jest dostępna tylko w walucie konta.'
+        overdue: 'Płatność z odroczonym terminem jest wstrzymana z powodu zaległych faktur.'
+        credit_hold: 'Płatność z odroczonym terminem jest zawieszona dla Twojego konta.'
+        limit_exceeded: 'Wartość zamówienia przekracza dostępny kredyt: wybierz inną metodę płatności.'
+    account:
+        unique: 'Ten właściciel ma już konto kredytowe.'
+    payment_terms_policy:
+        unique: 'Ta metoda płatności ma już warunki płatności.'

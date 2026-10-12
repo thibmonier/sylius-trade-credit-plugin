@@ -1,0 +1,60 @@
+{% set customer = hookable_metadata.context.resource %}
+{% set account = tmonier_trade_credit_account(customer) %}
+
+<div class="card mb-3" {{ sylius_test_html_attribute('tmonier-trade-credit-card') }}>
+    <div class="card-header">
+        <div class="card-title">
+            {{ ux_icon('tabler:credit-card-pay', {'class': 'icon'}) }}
+            {{ 'tmonier_trade_credit.ui.trade_credit'|trans }}
+        </div>
+        <div class="card-actions">
+            {% if account %}
+                <a class="btn btn-sm" href="{{ path('tmonier_trade_credit_admin_account_ledger', {'accountId': account.id}) }}">{{ ux_icon('tabler:list-details', {'class': 'icon'}) }} {{ 'tmonier_trade_credit.ui.ledger'|trans }}</a>
+                <a class="btn btn-sm" href="{{ path('tmonier_trade_credit_admin_account_update', {'id': account.id}) }}" {{ sylius_test_html_attribute('tmonier-edit-account') }}>{{ ux_icon('tabler:pencil', {'class': 'icon'}) }} {{ 'sylius.ui.edit'|trans }}</a>
+            {% else %}
+                <a class="btn btn-sm btn-primary" href="{{ path('tmonier_trade_credit_admin_account_create_for_customer', {'customerId': customer.id}) }}" {{ sylius_test_html_attribute('tmonier-open-account') }}>{{ ux_icon('tabler:plus', {'class': 'icon'}) }} {{ 'tmonier_trade_credit.ui.open_account'|trans }}</a>
+            {% endif %}
+        </div>
+    </div>
+    <div class="card-body">
+        {% if account is null %}
+            <p class="text-secondary mb-0">{{ 'tmonier_trade_credit.ui.no_account'|trans }}</p>
+        {% else %}
+            {% set currency = account.currencyCode ?? 'USD' %}
+            <div class="row text-center mb-3">
+                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.credit_limit'|trans }}</div><div class="h3 mb-0">{{ account.creditLimit|sylius_format_money(currency, app.request.locale) }}</div></div>
+                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.committed'|trans }}</div><div class="h3 mb-0">{{ account.committedAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
+                <div class="col"><div class="text-secondary small">{{ 'tmonier_trade_credit.ui.available'|trans }}</div><div class="h3 mb-0" {{ sylius_test_html_attribute('tmonier-available') }}>{{ account.availableAmount|sylius_format_money(currency, app.request.locale) }}</div></div>
+            </div>
+            <div class="mb-2">
+                {% if not account.enabled %}<span class="badge bg-secondary-lt">{{ 'tmonier_trade_credit.ui.disabled'|trans }}</span>{% endif %}
+                {% if account.creditHold %}<span class="badge bg-danger-lt">{{ 'tmonier_trade_credit.ui.credit_hold'|trans }}</span>{% endif %}
+                {% if account.allowExceed %}<span class="badge bg-yellow-lt">{{ 'tmonier_trade_credit.form.allow_exceed'|trans }}</span>{% endif %}
+                {% if account.netDays is not null %}
+                    <span class="badge bg-blue-lt">{{ ('tmonier_trade_credit.end_of_month_mode_short.' ~ (account.endOfMonthMode ? account.endOfMonthMode.value : 'none'))|trans({'%days%': account.netDays}) }}</span>
+                {% endif %}
+            </div>
+            {% set warning = tmonier_trade_credit_legal_warning(account) %}
+            {% if warning %}
+                <div class="alert alert-warning py-2">{{ warning|trans(tmonier_trade_credit_legal_parameters()) }}</div>
+            {% endif %}
+            {% set items = tmonier_trade_credit_open_items(account) %}
+            {% if items is empty %}
+                <p class="text-secondary mb-0">{{ 'tmonier_trade_credit.ui.no_open_items'|trans }}</p>
+            {% else %}
+                <table class="table table-sm mb-0">
+                    <thead><tr><th>{{ 'sylius.ui.order'|trans }}</th><th>{{ 'sylius.ui.amount'|trans }}</th><th>{{ 'tmonier_trade_credit.ui.due_date'|trans }}</th></tr></thead>
+                    <tbody>
+                        {% for terms in items %}
+                            <tr>
+                                <td><a href="{{ path('sylius_admin_order_show', {'id': terms.order.id}) }}">#{{ terms.order.number }}</a></td>
+                                <td>{{ terms.amount|sylius_format_money(terms.currencyCode, app.request.locale) }}</td>
+                                <td>{{ terms.dueDate|date('Y-m-d') }}{% if tmonier_trade_credit_is_overdue(terms) %} <span class="badge bg-danger-lt">{{ 'tmonier_trade_credit.ui.overdue'|trans }}</span>{% endif %}</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>

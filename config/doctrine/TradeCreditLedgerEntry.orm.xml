@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:gedmo="http://gediminasm.org/schemas/orm/doctrine-extensions-mapping">
+
+    <mapped-superclass name="Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditLedgerEntry" table="tmonier_trade_credit_ledger_entry">
+        <indexes>
+            <index name="tmonier_trade_credit_ledger_account_idx" columns="account_id,created_at" />
+        </indexes>
+
+        <id name="id" column="id" type="guid" />
+
+        <field name="type" column="type" type="string" length="16" />
+        <field name="amount" column="amount" type="integer" />
+        <field name="committedAfter" column="committed_after" type="integer" />
+        <field name="reason" column="reason" type="string" length="64" nullable="true" />
+        <field name="createdAt" column="created_at" type="datetime_immutable" />
+
+        <many-to-one field="account" target-entity="Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface">
+            <join-column name="account_id" referenced-column-name="id" nullable="false" on-delete="CASCADE" />
+        </many-to-one>
+        <many-to-one field="order" target-entity="Sylius\Component\Order\Model\OrderInterface">
+            <join-column name="order_id" referenced-column-name="id" nullable="true" on-delete="SET NULL" />
+        </many-to-one>
+        <many-to-one field="orderPaymentTerms" target-entity="Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface">
+            <join-column name="order_payment_terms_id" referenced-column-name="id" nullable="true" on-delete="SET NULL" />
+        </many-to-one>
+    </mapped-superclass>
+</doctrine-mapping>

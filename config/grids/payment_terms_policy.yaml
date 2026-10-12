@@ -1,0 +1,39 @@
+sylius_grid:
+    grids:
+        tmonier_trade_credit_admin_payment_terms_policy:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%tmonier_trade_credit.model.payment_terms_policy.class%"
+            sorting:
+                id: asc
+            fields:
+                paymentMethod:
+                    type: twig
+                    label: sylius.ui.payment_method
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/policy_method.html.twig"
+                        vars:
+                            th_class: "w-100"
+                terms:
+                    type: twig
+                    label: tmonier_trade_credit.ui.terms
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/policy_terms.html.twig"
+                enabled:
+                    type: twig
+                    label: sylius.ui.enabled
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/boolean.html.twig"
+            actions:
+                main:
+                    create:
+                        type: create
+                item:
+                    update:
+                        type: update
+                    delete:
+                        type: delete

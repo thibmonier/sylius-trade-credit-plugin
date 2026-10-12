@@ -1,0 +1,12 @@
+tmonier_trade_credit:
+    flash:
+        marked_as_paid: 'Die Bestellung wurde als bezahlt markiert.'
+        cannot_mark_as_paid: 'Diese Bestellung kann nicht als bezahlt markiert werden (keine offene Zahlung oder bereits bezahlt).'
+    payment_entry:
+        on_account: 'Diese Bestellung wird auf Rechnung bezahlt: Bitte überweisen Sie den Betrag vor dem %due_date%.'
+    reservation:
+        no_account: 'Der Kauf auf Rechnung ist für diese Bestellung nicht verfügbar.'
+        currency: 'Der Kauf auf Rechnung ist nur in der Währung Ihres Kontos verfügbar.'
+        overdue: 'Der Kauf auf Rechnung ist ausgesetzt, solange Rechnungen überfällig sind.'
+        credit_hold: 'Der Kauf auf Rechnung ist für Ihr Konto ausgesetzt.'
+        limit_exceeded: 'Die Bestellsumme übersteigt Ihren verfügbaren Kredit: Wählen Sie eine andere Zahlungsart.'

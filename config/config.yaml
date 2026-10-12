@@ -1,0 +1,11 @@
+imports:
+    - { resource: "grids/*.yaml" }
+    - { resource: "twig_hooks/**/*.yaml" }
+
+sylius_grid:
+    templates:
+        filter:
+            tmonier_trade_credit_overdue: '@SyliusAdmin/shared/grid/filter/boolean.html.twig'
+        action:
+            tmonier_trade_credit_mark_as_paid: '@TmonierSyliusTradeCreditPlugin/admin/grid/action/mark_as_paid.html.twig'
+            tmonier_trade_credit_ledger: '@TmonierSyliusTradeCreditPlugin/admin/grid/action/ledger.html.twig'

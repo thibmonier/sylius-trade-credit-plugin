@@ -1,0 +1,5 @@
+tmonier_trade_credit_shop_statement:
+    path: /account/trade-credit
+    methods: [GET]
+    defaults:
+        _controller: tmonier_trade_credit.controller.shop.statement

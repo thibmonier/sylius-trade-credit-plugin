@@ -1,0 +1,51 @@
+sylius_grid:
+    grids:
+        tmonier_trade_credit_admin_ledger_entry:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%tmonier_trade_credit.model.ledger_entry.class%"
+                    repository:
+                        method: createByAccountQueryBuilder
+                        arguments:
+                            accountId: "expr:service('request_stack').getCurrentRequest().attributes.get('accountId')"
+            sorting:
+                createdAt: desc
+            fields:
+                createdAt:
+                    type: datetime
+                    label: sylius.ui.date
+                    sortable: ~
+                    options:
+                        format: 'Y-m-d H:i'
+                type:
+                    type: twig
+                    label: sylius.ui.type
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/ledger_type.html.twig"
+                order:
+                    type: twig
+                    label: sylius.ui.order
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/order.html.twig"
+                amount:
+                    type: twig
+                    label: sylius.ui.amount
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/ledger_money.html.twig"
+                        vars:
+                            field: amount
+                committedAfter:
+                    type: twig
+                    label: tmonier_trade_credit.ui.committed_after
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/ledger_money.html.twig"
+                        vars:
+                            field: committedAfter
+                reason:
+                    type: string
+                    label: tmonier_trade_credit.ui.reason

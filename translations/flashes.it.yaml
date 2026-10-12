@@ -1,0 +1,12 @@
+tmonier_trade_credit:
+    flash:
+        marked_as_paid: 'L''ordine è stato segnato come pagato.'
+        cannot_mark_as_paid: 'Questo ordine non può essere segnato come pagato (nessun pagamento in sospeso o già pagato).'
+    payment_entry:
+        on_account: 'Questo ordine è pagato a credito: lo paghi con bonifico entro il %due_date%.'
+    reservation:
+        no_account: 'Il pagamento a credito non è disponibile per questo ordine.'
+        currency: 'Il pagamento a credito è disponibile solo nella valuta del suo conto.'
+        overdue: 'Il pagamento a credito è sospeso finché ci sono fatture scadute.'
+        credit_hold: 'Il pagamento a credito è sospeso per il suo conto.'
+        limit_exceeded: 'Il totale dell''ordine supera il credito disponibile: scelga un altro metodo di pagamento.'

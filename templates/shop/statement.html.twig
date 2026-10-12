@@ -1,0 +1,79 @@
+{% extends '@SyliusShop/shared/layout/base.html.twig' %}
+{% from '@SyliusShop/shared/breadcrumbs.html.twig' import breadcrumbs %}
+
+{% block title %}{{ 'tmonier_trade_credit.ui.trade_credit'|trans }} | {{ parent() }}{% endblock %}
+
+{% block content %}
+    <div class="container mb-auto">
+        <div class="row my-4">
+            <div class="col-12">
+                {{ breadcrumbs([
+                    { label: 'sylius.ui.home'|trans, path: path('sylius_shop_homepage') },
+                    { label: 'sylius.ui.my_account'|trans, path: path('sylius_shop_account_dashboard') },
+                    { label: 'tmonier_trade_credit.ui.trade_credit'|trans, active: true },
+                ]) }}
+            </div>
+            <div class="col-12 col-md-3 mb-4 mb-md-0">
+                <div class="mb-3">{{ knp_menu_render('sylius_shop.account', {'template': '@SyliusShop/account/menu/content.html.twig'}) }}</div>
+            </div>
+            <div class="col-12 col-md-9">
+                {% include '@SyliusShop/shared/flashes.html.twig' %}
+                <div class="mb-4">
+                    <h1>{{ 'tmonier_trade_credit.ui.trade_credit'|trans }}</h1>
+                    <div class="text-body-secondary">{{ 'tmonier_trade_credit.ui.statement_help'|trans }}</div>
+                </div>
+                {% if statement is null %}
+                    <div class="alert alert-light" {{ sylius_test_html_attribute('tmonier-trade-credit-none') }}>{{ 'tmonier_trade_credit.ui.no_account_shop'|trans }}</div>
+                {% else %}
+                    {% set account = statement.account %}
+                    {% set currency = account.currencyCode ?? 'USD' %}
+                    <div class="row g-3 mb-4" {{ sylius_test_html_attribute('tmonier-trade-credit-summary') }}>
+                        <div class="col-12 col-sm-4"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.credit_limit'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-credit-limit') }}>{{ account.creditLimit|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                        <div class="col-12 col-sm-4"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.committed'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-committed') }}>{{ account.committedAmount|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                        <div class="col-12 col-sm-4"><div class="card"><div class="card-body"><div class="text-body-secondary small">{{ 'tmonier_trade_credit.ui.available'|trans }}</div><div class="fs-4 fw-semibold" {{ sylius_test_html_attribute('tmonier-available') }}>{{ max(0, account.availableAmount)|sylius_format_money(currency, app.request.locale) }}</div></div></div></div>
+                    </div>
+                    {% if account.creditHold or not account.enabled %}
+                        <div class="alert alert-warning">{{ 'tmonier_trade_credit.ui.account_on_hold_shop'|trans }}</div>
+                    {% endif %}
+                    {% if statement.overdueAmount > 0 %}
+                        <div class="alert alert-danger" {{ sylius_test_html_attribute('tmonier-overdue-alert') }}>{{ 'tmonier_trade_credit.ui.overdue_alert'|trans({'%amount%': statement.overdueAmount|sylius_format_money(currency, app.request.locale)}) }}</div>
+                    {% endif %}
+                    <h2 class="h4">{{ 'tmonier_trade_credit.ui.open_items'|trans }}</h2>
+                    {% if statement.items is empty %}
+                        <div class="alert alert-light">{{ 'tmonier_trade_credit.ui.no_open_items'|trans }}</div>
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table align-middle" {{ sylius_test_html_attribute('tmonier-open-items') }}>
+                                <thead>
+                                    <tr>
+                                        <th>{{ 'sylius.ui.order'|trans }}</th>
+                                        <th>{{ 'sylius.ui.date'|trans }}</th>
+                                        <th>{{ 'sylius.ui.amount'|trans }}</th>
+                                        <th>{{ 'tmonier_trade_credit.ui.due_date'|trans }}</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in statement.items %}
+                                        <tr {{ sylius_test_html_attribute('tmonier-open-item', item.orderNumber) }}>
+                                            <td class="fw-semibold"><a href="{{ path('sylius_shop_account_order_show', {'number': item.orderNumber}) }}">#{{ item.orderNumber }}</a></td>
+                                            <td>{{ item.orderDate|date('Y-m-d') }}</td>
+                                            <td>{{ item.amount|sylius_format_money(currency, app.request.locale) }}</td>
+                                            <td>
+                                                {{ item.dueDate|date('Y-m-d') }}
+                                                {% if item.overdue %}<span class="badge text-bg-danger ms-1">{{ 'tmonier_trade_credit.ui.overdue'|trans }}</span>{% endif %}
+                                            </td>
+                                            <td class="text-end">
+                                                {% if item.invoiceUrl %}<a class="btn btn-sm btn-outline-primary" href="{{ item.invoiceUrl }}">{{ 'tmonier_trade_credit.ui.invoice_pdf'|trans }}</a>{% endif %}
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,5 @@
+{{ data.dueDate|date('Y-m-d') }}
+{% if tmonier_trade_credit_is_overdue(data) %}
+    <span class="badge bg-danger-lt ms-1" {{ sylius_test_html_attribute('tmonier-overdue') }}>{{ 'tmonier_trade_credit.ui.overdue'|trans }}</span>
+{% endif %}
+<div class="text-secondary small">{{ ('tmonier_trade_credit.end_of_month_mode_short.' ~ data.endOfMonthMode.value)|trans({'%days%': data.netDays}) }}</div>

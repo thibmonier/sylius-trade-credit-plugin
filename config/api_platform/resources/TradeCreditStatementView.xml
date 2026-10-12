@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<resources
+    xmlns="https://api-platform.com/schema/metadata/resources-3.0"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="https://api-platform.com/schema/metadata/resources-3.0 https://api-platform.com/schema/metadata/resources-3.0.xsd"
+>
+    <resource class="Tmonier\SyliusTradeCreditPlugin\Api\TradeCreditStatementView" shortName="TradeCreditStatement">
+        <operations>
+            <operation
+                name="tmonier_trade_credit_api_shop_statement_get"
+                class="ApiPlatform\Metadata\Get"
+                uriTemplate="/shop/trade-credit/statement"
+                provider="tmonier_trade_credit.api.statement_provider"
+                security="is_granted('ROLE_USER')"
+            />
+        </operations>
+    </resource>
+</resources>

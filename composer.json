@@ -1,0 +1,110 @@
+{
+    "name": "tmonier/sylius-trade-credit-plugin",
+    "type": "sylius-plugin",
+    "description": "B2B trade credit (payment on account) for Sylius 2: credit accounts with limits, net terms and end-of-month terms, atomic reservations, statements, admin open items and Factur-X payment terms",
+    "keywords": [
+        "sylius",
+        "sylius-plugin",
+        "b2b",
+        "trade-credit",
+        "payment-on-account",
+        "net-30",
+        "credit-limit",
+        "payment-terms"
+    ],
+    "license": "MIT",
+    "require": {
+        "php": "^8.2",
+        "sylius/sylius": "^2.2.9 || ^2.3",
+        "symfony/clock": "^6.4 || ^7.4 || ^8.0",
+        "tmonier/sylius-order-hold-plugin": "^1.0"
+    },
+    "require-dev": {
+        "phpstan/phpstan": "^2.1",
+        "phpstan/phpstan-doctrine": "^2.0",
+        "phpstan/phpstan-webmozart-assert": "^2.0",
+        "phpunit/phpunit": "^10.5",
+        "sylius-labs/coding-standard": "^4.4",
+        "sylius/test-application": "^2.0.0@alpha",
+        "symfony/browser-kit": "^6.4 || ^7.4 || ^8.0",
+        "symfony/css-selector": "^6.4 || ^7.4 || ^8.0",
+        "symfony/debug-bundle": "^6.4 || ^7.4 || ^8.0",
+        "symfony/dom-crawler": "^6.4 || ^7.4 || ^8.0",
+        "symfony/dotenv": "^6.4 || ^7.4 || ^8.0",
+        "symfony/http-client": "^6.4 || ^7.4 || ^8.0",
+        "symfony/intl": "^6.4 || ^7.4 || ^8.0",
+        "symfony/runtime": "^6.4 || ^7.4 || ^8.0",
+        "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.0",
+        "symfony/webpack-encore-bundle": "^2.2",
+        "tmonier/sylius-facturx-plugin": "^1.1"
+    },
+    "suggest": {
+        "tmonier/sylius-facturx-plugin": "Per-order due date (BT-9) and payment terms (BT-20) in Factur-X invoices",
+        "sylius/invoicing-plugin": "Invoice PDF links on the trade credit statement"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../sylius-order-hold-plugin",
+            "options": {
+                "symlink": false,
+                "versions": {
+                    "tmonier/sylius-order-hold-plugin": "1.0.0"
+                }
+            }
+        }
+    ],
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "dealerdirect/phpcodesniffer-composer-installer": false,
+            "php-http/discovery": false,
+            "phpstan/extension-installer": true,
+            "symfony/flex": true,
+            "symfony/runtime": true
+        }
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "1.0-dev"
+        },
+        "symfony": {
+            "require": "^7.4"
+        },
+        "public-dir": "vendor/sylius/test-application/public"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tmonier\\SyliusTradeCreditPlugin\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tests\\Tmonier\\SyliusTradeCreditPlugin\\": [
+                "tests/",
+                "tests/TestApplication/src/"
+            ]
+        }
+    },
+    "scripts": {
+        "database-reset": [
+            "vendor/bin/console doctrine:database:drop --force --if-exists",
+            "vendor/bin/console doctrine:database:create",
+            "vendor/bin/console doctrine:migration:migrate -n",
+            "vendor/bin/console sylius:fixtures:load -n"
+        ],
+        "frontend-clear": [
+            "cd vendor/sylius/test-application && yarn install && yarn build",
+            "vendor/bin/console assets:install"
+        ],
+        "test-app-init": [
+            "@database-reset",
+            "@frontend-clear"
+        ]
+    },
+    "authors": [
+        {
+            "name": "Thibaut Monier"
+        }
+    ]
+}

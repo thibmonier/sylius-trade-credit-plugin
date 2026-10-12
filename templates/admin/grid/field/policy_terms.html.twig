@@ -1,0 +1,3 @@
+{{ ('tmonier_trade_credit.end_of_month_mode_short.' ~ data.endOfMonthMode.value)|trans({'%days%': data.netDays}) }}
+{% set warning = tmonier_trade_credit_legal_warning(data) %}
+{% if warning %}<div class="text-warning small">{{ warning|trans(tmonier_trade_credit_legal_parameters()) }}</div>{% endif %}

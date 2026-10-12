@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:gedmo="http://gediminasm.org/schemas/orm/doctrine-extensions-mapping">
+
+    <mapped-superclass name="Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicy" table="tmonier_trade_credit_payment_terms_policy">
+        <id name="id" column="id" type="integer">
+            <generator strategy="AUTO" />
+        </id>
+
+        <field name="netDays" column="net_days" type="integer" />
+        <field name="endOfMonthMode" column="end_of_month_mode" type="string" length="32" />
+        <field name="enabled" column="enabled" type="boolean" />
+        <field name="createdAt" column="created_at" type="datetime">
+            <gedmo:timestampable on="create" />
+        </field>
+        <field name="updatedAt" column="updated_at" type="datetime" nullable="true">
+            <gedmo:timestampable on="update" />
+        </field>
+
+        <one-to-one field="paymentMethod" target-entity="Sylius\Component\Payment\Model\PaymentMethodInterface">
+            <join-column name="payment_method_id" referenced-column-name="id" nullable="false" unique="true" on-delete="CASCADE" />
+        </one-to-one>
+    </mapped-superclass>
+</doctrine-mapping>

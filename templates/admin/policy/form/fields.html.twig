@@ -1,0 +1,9 @@
+{% set form = hookable_metadata.context.form %}
+
+<div class="row">
+    <div class="col-12 col-md-6">{{ form_row(form.paymentMethod) }}</div>
+    <div class="col-12 col-md-2">{{ form_row(form.netDays) }}</div>
+    <div class="col-12 col-md-4">{{ form_row(form.endOfMonthMode) }}</div>
+</div>
+{{ form_row(form.enabled) }}
+<p class="text-secondary small mb-0">{{ 'tmonier_trade_credit.form.legal_help'|trans }}</p>

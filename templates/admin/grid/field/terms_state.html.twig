@@ -1,0 +1,2 @@
+{% set colors = {'reserved': 'bg-yellow-lt', 'settled': 'bg-green-lt', 'released': 'bg-secondary-lt'} %}
+<span class="badge {{ colors[data.state] ?? 'bg-secondary-lt' }}">{{ ('tmonier_trade_credit.terms_state.' ~ data.state)|trans }}</span>

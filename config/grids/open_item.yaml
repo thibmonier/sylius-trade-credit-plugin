@@ -1,0 +1,74 @@
+sylius_grid:
+    grids:
+        tmonier_trade_credit_admin_open_item:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%tmonier_trade_credit.model.order_payment_terms.class%"
+                    repository:
+                        method: createOpenItemsQueryBuilder
+            sorting:
+                dueDate: asc
+            fields:
+                order:
+                    type: twig
+                    label: sylius.ui.order
+                    path: .
+                    sortable: ord.number
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/order.html.twig"
+                customer:
+                    type: twig
+                    label: sylius.ui.customer
+                    path: .
+                    sortable: customer.email
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/customer.html.twig"
+                        vars:
+                            th_class: "w-100"
+                amount:
+                    type: twig
+                    label: sylius.ui.amount
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/money.html.twig"
+                        vars:
+                            field: amount
+                dueDate:
+                    type: twig
+                    label: tmonier_trade_credit.ui.due_date
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/due_date.html.twig"
+                state:
+                    type: twig
+                    label: sylius.ui.state
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/terms_state.html.twig"
+            filters:
+                search:
+                    type: string
+                    label: sylius.ui.search
+                    options:
+                        fields: [ord.number, customer.email]
+                state:
+                    type: select
+                    label: sylius.ui.state
+                    default_value: reserved
+                    form_options:
+                        choices:
+                            tmonier_trade_credit.terms_state.reserved: reserved
+                            tmonier_trade_credit.terms_state.settled: settled
+                            tmonier_trade_credit.terms_state.released: released
+                overdue:
+                    type: tmonier_trade_credit_overdue
+                    label: tmonier_trade_credit.ui.overdue
+            actions:
+                item:
+                    mark_as_paid:
+                        type: tmonier_trade_credit_mark_as_paid
+                        label: tmonier_trade_credit.ui.mark_as_paid

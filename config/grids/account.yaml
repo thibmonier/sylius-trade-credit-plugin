@@ -1,0 +1,72 @@
+sylius_grid:
+    grids:
+        tmonier_trade_credit_admin_account:
+            driver:
+                name: doctrine/orm
+                options:
+                    class: "%tmonier_trade_credit.model.account.class%"
+            sorting:
+                id: desc
+            fields:
+                owner:
+                    type: twig
+                    label: tmonier_trade_credit.ui.owner
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/owner.html.twig"
+                        vars:
+                            th_class: "w-100"
+                creditLimit:
+                    type: twig
+                    label: tmonier_trade_credit.ui.credit_limit
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/money.html.twig"
+                        vars:
+                            field: creditLimit
+                committedAmount:
+                    type: twig
+                    label: tmonier_trade_credit.ui.committed
+                    path: .
+                    sortable: ~
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/money.html.twig"
+                        vars:
+                            field: committedAmount
+                availableAmount:
+                    type: twig
+                    label: tmonier_trade_credit.ui.available
+                    path: .
+                    options:
+                        template: "@TmonierSyliusTradeCreditPlugin/admin/grid/field/money.html.twig"
+                        vars:
+                            field: availableAmount
+                creditHold:
+                    type: twig
+                    label: tmonier_trade_credit.ui.credit_hold
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/boolean.html.twig"
+                enabled:
+                    type: twig
+                    label: sylius.ui.enabled
+                    sortable: ~
+                    options:
+                        template: "@SyliusAdmin/shared/grid/field/boolean.html.twig"
+            filters:
+                creditHold:
+                    type: boolean
+                    label: tmonier_trade_credit.ui.credit_hold
+                enabled:
+                    type: boolean
+                    label: sylius.ui.enabled
+            actions:
+                item:
+                    ledger:
+                        type: tmonier_trade_credit_ledger
+                        label: tmonier_trade_credit.ui.ledger
+                    update:
+                        type: update
+                    delete:
+                        type: delete

@@ -1,0 +1,4 @@
+{% if data.paymentMethod %}
+    <a href="{{ path('sylius_admin_payment_method_update', {'id': data.paymentMethod.id}) }}">{{ data.paymentMethod.name }}</a>
+    <div class="text-secondary small">{{ data.paymentMethod.code }}</div>
+{% endif %}

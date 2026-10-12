@@ -1,0 +1,16 @@
+imports:
+    - { resource: "@TmonierSyliusTradeCreditPlugin/config/config.yaml" }
+    - { resource: "dbal_savepoints.php" }
+
+twig:
+    paths:
+        '%kernel.project_dir%/../../../tests/TestApplication/templates': ~
+
+# Demo data (dev and test databases): "On account (net 30)" method, b2b@example.com with a
+# trade credit account and two open items (one overdue); verifies the fixture shop users.
+sylius_fixtures:
+    suites:
+        default:
+            fixtures:
+                tmonier_trade_credit:
+                    priority: -100

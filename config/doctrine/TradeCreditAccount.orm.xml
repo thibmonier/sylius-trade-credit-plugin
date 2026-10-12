@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<doctrine-mapping xmlns="http://doctrine-project.org/schemas/orm/doctrine-mapping"
+                  xmlns:gedmo="http://gediminasm.org/schemas/orm/doctrine-extensions-mapping">
+
+    <mapped-superclass name="Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccount" table="tmonier_trade_credit_account">
+        <unique-constraints>
+            <unique-constraint name="tmonier_trade_credit_account_owner_uniq" columns="owner_type,owner_identifier" />
+        </unique-constraints>
+
+        <id name="id" column="id" type="integer">
+            <generator strategy="AUTO" />
+        </id>
+
+        <field name="ownerType" column="owner_type" type="string" length="32" />
+        <field name="ownerIdentifier" column="owner_identifier" type="string" length="64" />
+        <field name="currencyCode" column="currency_code" type="string" length="3" />
+        <field name="creditLimit" column="credit_limit" type="integer" />
+        <field name="committedAmount" column="committed_amount" type="integer" />
+        <field name="allowExceed" column="allow_exceed" type="boolean" />
+        <field name="creditHold" column="credit_hold" type="boolean" />
+        <field name="blockWhenOverdue" column="block_when_overdue" type="boolean" />
+        <field name="netDays" column="net_days" type="integer" nullable="true" />
+        <field name="endOfMonthMode" column="end_of_month_mode" type="string" length="32" nullable="true" />
+        <field name="enabled" column="enabled" type="boolean" />
+        <field name="note" column="note" type="text" nullable="true" />
+        <field name="createdAt" column="created_at" type="datetime">
+            <gedmo:timestampable on="create" />
+        </field>
+        <field name="updatedAt" column="updated_at" type="datetime" nullable="true">
+            <gedmo:timestampable on="update" />
+        </field>
+    </mapped-superclass>
+</doctrine-mapping>

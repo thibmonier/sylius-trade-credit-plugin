@@ -1,0 +1,12 @@
+tmonier_trade_credit:
+    flash:
+        marked_as_paid: 'De bestelling is als betaald gemarkeerd.'
+        cannot_mark_as_paid: 'Deze bestelling kan niet als betaald gemarkeerd worden (geen openstaande betaling of al betaald).'
+    payment_entry:
+        on_account: 'Deze bestelling wordt op rekening betaald: betaal per overschrijving vóór %due_date%.'
+    reservation:
+        no_account: 'Betalen op rekening is niet beschikbaar voor deze bestelling.'
+        currency: 'Betalen op rekening is alleen beschikbaar in de valuta van uw rekening.'
+        overdue: 'Betalen op rekening is opgeschort zolang er facturen vervallen zijn.'
+        credit_hold: 'Betalen op rekening is opgeschort voor uw account.'
+        limit_exceeded: 'Het besteltotaal overschrijdt uw beschikbare krediet: kies een andere betaalmethode.'

@@ -1,0 +1,37 @@
+sylius_twig_hooks:
+    hooks:
+        # Trade credit card on the customer page.
+        'sylius_admin.customer.show.content.sections':
+            tmonier_trade_credit:
+                template: '@TmonierSyliusTradeCreditPlugin/admin/customer/trade_credit_card.html.twig'
+                priority: -40
+
+        # Account form (create from the customer page, update).
+        'tmonier_trade_credit_admin.account.create.content.form.sections.general':
+            default:
+                enabled: false
+            fields:
+                template: '@TmonierSyliusTradeCreditPlugin/admin/account/form/fields.html.twig'
+                priority: 0
+
+        'tmonier_trade_credit_admin.account.update.content.form.sections.general':
+            default:
+                enabled: false
+            fields:
+                template: '@TmonierSyliusTradeCreditPlugin/admin/account/form/fields.html.twig'
+                priority: 0
+
+        # Payment terms policy form.
+        'tmonier_trade_credit_admin.payment_terms_policy.create.content.form.sections.general':
+            default:
+                enabled: false
+            fields:
+                template: '@TmonierSyliusTradeCreditPlugin/admin/policy/form/fields.html.twig'
+                priority: 0
+
+        'tmonier_trade_credit_admin.payment_terms_policy.update.content.form.sections.general':
+            default:
+                enabled: false
+            fields:
+                template: '@TmonierSyliusTradeCreditPlugin/admin/policy/form/fields.html.twig'
+                priority: 0
