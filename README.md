@@ -36,6 +36,20 @@ terms in Factur-X invoices. B2B only: this is not consumer credit.
 Also included: demo fixture, translations in English, French, German, Spanish, Italian, Dutch
 and Polish, Twig Hooks, MySQL, MariaDB and PostgreSQL support.
 
+## Screenshots
+
+![On account (net 30) at the payment step of the checkout](docs/images/shop-checkout-on-account.jpg)
+
+![Trade credit statement in the customer account: limit, committed, available and open items](docs/images/shop-trade-credit-statement.jpg)
+
+![Trade credit accounts in the back office](docs/images/admin-trade-credit-accounts.jpg)
+
+![Trade credit account form](docs/images/admin-trade-credit-account-edit.jpg)
+
+![Open items filtered on overdue](docs/images/admin-trade-credit-open-items-overdue.jpg)
+
+![Trade credit card on the customer page](docs/images/admin-customer-trade-credit.jpg)
+
 ## Requirements
 
 | | Version |
