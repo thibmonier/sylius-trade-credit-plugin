@@ -42,7 +42,8 @@ with the default fixture suite + `tmonier_trade_credit` (method "On account (net
 - `Entity/` (XML mappings in `config/doctrine`, migration `src/Migrations`, Schema API):
   `TradeCreditAccount`, `PaymentTermsPolicy`, `OrderPaymentTerms` (UUID), `TradeCreditLedgerEntry` (UUID).
 - `Reservation/TradeCreditReserver`: the only writer of committed amounts, terms and ledger
-  (SQL, `transactional()`): `reserve()`, `close()` (idempotent), `adjust()`, `committedAmount()`.
+  (SQL, `transactional()`, account row locked first): `reserve()`, `close()` (idempotent),
+  `recalculate()`, `staleReservations()`, `mismatchedReservations()` (used by the command).
   Refreshes managed entities, except while Doctrine flushes (`$refreshEntities = false`).
 - `EventListener/TradeCreditWorkflowListener` (checkout complete transition, payment
   complete / fail / cancel, order cancel), `PaymentMethodSwitchListener` (Doctrine onFlush),

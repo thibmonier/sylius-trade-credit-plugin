@@ -117,8 +117,10 @@ overridden like any Sylius resource (`tmonier_sylius_trade_credit.resources.acco
   address has a company name** (B2B check), the account is not on hold, has no overdue open
   item when it blocks them, and the available credit covers the order total (unless exceeding
   is allowed). Accounts are opened by staff, who verify the customer. An order that left
-  payment on account (switched method, failed payment) and is still unpaid after its due date
-  still counts as overdue.
+  payment on account (switched to a method that is not on account, failed payment) and is still
+  unpaid after its due date still counts as overdue: it is listed as overdue on the statement,
+  the customer card and the admin open items (where it can be marked as paid). Switching to
+  another method on account is not leaving: the new terms apply.
 - **Disabling or deleting payment terms**: a disabled policy refuses its method (it never
   becomes a plain Offline method for everyone); open items stay settleable, because closing is
   driven by the reservation, not by the current policy. A policy with open items cannot be
@@ -162,7 +164,9 @@ shop users of the fixtures (the demo channel requires a verified account to sign
   two steps: if saving the order fails afterwards, the reservation left on the cart is replaced
   when the checkout is completed again, and released after an hour by
   `tmonier:trade-credit:recalculate --apply` (run it from a daily cron; it locks each account,
-  so it is safe while customers order). In the API, the command bus transaction covers both.
+  so it is safe while customers order). Likewise, if the save of a method switch fails after
+  the new reservation was made, paying the order still settles it and the command reserves
+  again for the method of the payment (or releases). In the API, the command bus transaction covers both.
 - A new payment created after a failed one keeps the method on account and reserves again; if
   the credit is no longer available, order-hold replaces the method by an eligible one, or the
   payment stays without reservation and the customer is asked to choose another method.

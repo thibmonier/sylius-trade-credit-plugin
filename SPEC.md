@@ -45,8 +45,9 @@ cannot be deleted.
   a shop user, not `createdByGuest`; Sylius attaches an existing customer to a guest checkout
   from the typed e-mail, so a guest gets a generic refusal without account details) → order owner has an enabled
   account in the order currency → billing address company not empty (B2B) → not on hold → no
-  overdue item when `block_when_overdue` (reserved past its due date, or released by a method
-  switch / failed or cancelled payment while the order is still unpaid) → `allow_exceed` or
+  overdue item when `block_when_overdue` (reserved past its due date, or *left unpaid*: released
+  by a method switch / failed or cancelled payment, still the latest terms of the order — no
+  reservation since —, order not cancelled and unpaid, past its due date) → `allow_exceed` or
   `limit − committed + open reservation of this order ≥ order total`. A placed order already
   reserved with this very method keeps it.
 - **Locking**: every reserver operation runs in one transaction that first locks the account
@@ -68,8 +69,10 @@ cannot be deleted.
   is logged).
 - **Closing** (`close`): `UPDATE terms SET state = :new WHERE id = :id AND state = 'reserved'`;
   only the request that changed the row decrements the committed amount and writes the ledger
-  entry. Driven by the open reservation made for the payment's method, never by the current
-  policy state (a disabled or deleted policy keeps its items settleable). Payment `fail` /
+  entry. Driven by the open reservation of the order, never by the current policy state (a
+  disabled or deleted policy keeps its items settleable): payment `complete` settles it
+  whatever its method (the order is paid), `fail` / `cancel` and switches release only the
+  reservation made for the payment's method. Payment `fail` /
   `cancel` listeners run at priority 200, before the core reprocesses the order (100), so that
   the order-hold kernel can replace a method that is no longer eligible on the next payment. Triggers: `sylius_payment` completed `complete` (settled, reason `paid`), `fail` /
   `cancel` (released), `sylius_order` completed `cancel` (released), method switch away from
@@ -77,7 +80,11 @@ cannot be deleted.
 - **Lost reservation**: `LostReservationCancellationExclusion` (order-hold) makes the unpaid
   orders expiration of an order that lost its reservation start at that release.
 - **Admin guard**: a policy with open items can be disabled, not deleted (no bulk delete) nor
-  moved to another payment method.
+  moved to another payment method. A disabled policy shows the signed-in customer
+  `payment_method.unavailable`.
+- **Left unpaid items** are shown as overdue on the statement (and `overdueAmount`), the admin
+  customer card and the open items grid (state "Open" and the "Overdue" filter include them;
+  Mark as paid completes the order's payment).
 - **Exception mapping**: `TradeCreditReservationException` (also when wrapped by Messenger) →
   422 JSON for `/api/*`, redirect + flash for shop (checkout complete or order page) and admin.
 - **Terms**: account terms override the policy; `PaymentTerms::dueDate()` from the completion
@@ -103,8 +110,10 @@ cannot be deleted.
   transition), ledger per account.
 - Factur-X (optional, `interface_exists`): `InvoicePaymentTermsProviderInterface`, priority 10.
 - Command `tmonier:trade-credit:recalculate [--apply]`: reservations older than an hour on
-  orders that are not placed (or cancelled) are released, then each drifted committed amount
-  is set under the account lock.
+  orders that are not placed (or cancelled) are released; reservations of placed orders whose
+  last payment has another method (method switch reserved in `onFlush`, its own transaction,
+  then the flush failed) are reserved again for that method when it is on account (same terms)
+  or released; then each drifted committed amount is set under the account lock.
 
 ## 5. Out of scope (v1)
 
