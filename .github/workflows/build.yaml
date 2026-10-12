@@ -79,11 +79,6 @@ jobs:
             -
                 uses: actions/checkout@v4
 
-            -
-                # The path repository (../sylius-order-hold-plugin) is for local development only:
-                # CI installs tmonier/sylius-order-hold-plugin from Packagist.
-                name: Use Packagist for tmonier/sylius-order-hold-plugin
-                run: composer config --unset repositories.order-hold
 
             -
                 name: Build Sylius Test Application
