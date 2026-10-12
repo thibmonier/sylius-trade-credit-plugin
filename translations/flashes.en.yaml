@@ -1,5 +1,6 @@
 tmonier_trade_credit:
     flash:
+        policy_has_open_items: 'These payment terms have open items: settle or release them before deleting the terms or changing their payment method (disable them to stop new orders).'
         marked_as_paid: 'The order has been marked as paid.'
         cannot_mark_as_paid: 'This order cannot be marked as paid (no pending payment or already paid).'
     payment_entry:

@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        placed_by: 'Placed by %name%'
+        account_days_policy_mode: '%days% days (end of month as the payment method)'
         trade_credit: 'Trade credit'
         trade_credit_accounts: 'Trade credit accounts'
         payment_terms_policies: 'Payment terms'
@@ -28,6 +30,8 @@ tmonier_trade_credit:
         overdue_alert: '%amount% is overdue. Please pay these orders as soon as possible.'
         invoice_pdf: 'Invoice (PDF)'
         legal_warning:
+            end_of_month_channel: 'These terms exceed %end_of_month_days% days end of month, the limit configured for the channel %channel% (sector caps, L441-11). Check the rules that apply to you.'
+            net_channel: 'These terms exceed %net_days% days, the limit configured for the channel %channel% (sector caps, L441-11). Check the rules that apply to you.'
             net: 'These terms exceed %net_days% days from the invoice date, the usual legal maximum between professionals in France (L441-10). Check the rules that apply to you.'
             end_of_month: 'These terms exceed %end_of_month_days% days end of month, the usual legal maximum between professionals in France (L441-10). Check the rules that apply to you.'
     form:

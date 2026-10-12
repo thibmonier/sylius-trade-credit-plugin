@@ -17,7 +17,10 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
  * - `sylius_order_checkout` transition `complete` (before the marking changes): reserve the
  *   order total when the payment is on account; a refusal aborts the completion;
  * - `sylius_payment` completed `complete`: settle (paid);
- * - `sylius_payment` completed `fail` / `cancel` and `sylius_order` completed `cancel`: release.
+ * - `sylius_payment` completed `fail` / `cancel` (before the core reprocesses the order and
+ *   creates the next payment) and `sylius_order` completed `cancel`: release.
+ * Closing is driven by the open reservation of the order (made for the payment method), never
+ * by the current state of the payment terms policy.
  * Settling and releasing are idempotent (see `TradeCreditReserver`).
  */
 final class TradeCreditWorkflowListener
@@ -75,13 +78,15 @@ final class TradeCreditWorkflowListener
     private function closeForPayment(Event $event, string $state, string $reason): void
     {
         $payment = $event->getSubject();
-        if (!$payment instanceof PaymentInterface || !$this->policyProvider->isOnAccount($payment->getMethod())) {
+        $paymentMethod = $payment instanceof PaymentInterface ? $payment->getMethod() : null;
+        if (!$payment instanceof PaymentInterface || null === $paymentMethod) {
             return;
         }
 
+        // Driven by the reservation made for this payment method, whatever the policy is now.
         $order = $payment->getOrder();
         if ($order instanceof OrderInterface) {
-            $this->reserver->close($order, $state, $reason);
+            $this->reserver->close($order, $state, $reason, true, $paymentMethod);
         }
     }
 }

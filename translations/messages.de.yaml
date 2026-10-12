@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        placed_by: 'Bestellt von %name%'
+        account_days_policy_mode: '%days% Tage (Monatsende wie die Zahlungsart)'
         trade_credit: 'Kauf auf Rechnung'
         trade_credit_accounts: 'Rechnungskauf-Konten'
         payment_terms_policies: 'Zahlungsbedingungen'
@@ -28,6 +30,8 @@ tmonier_trade_credit:
         overdue_alert: '%amount% sind überfällig. Bitte bezahlen Sie diese Bestellungen umgehend.'
         invoice_pdf: 'Rechnung (PDF)'
         legal_warning:
+            end_of_month_channel: 'Diese Bedingungen überschreiten %end_of_month_days% Tage zum Monatsende, das für den Kanal %channel% konfigurierte Limit (Branchengrenzen, L441-11). Prüfen Sie die geltenden Regeln.'
+            net_channel: 'Diese Bedingungen überschreiten %net_days% Tage, das für den Kanal %channel% konfigurierte Limit (Branchengrenzen, L441-11). Prüfen Sie die geltenden Regeln.'
             net: 'Diese Bedingungen überschreiten %net_days% Tage ab Rechnungsdatum, das übliche gesetzliche Maximum zwischen Unternehmen in Frankreich (L441-10). Prüfen Sie die geltenden Regeln.'
             end_of_month: 'Diese Bedingungen überschreiten %end_of_month_days% Tage zum Monatsende, das übliche gesetzliche Maximum zwischen Unternehmen in Frankreich (L441-10). Prüfen Sie die geltenden Regeln.'
     form:

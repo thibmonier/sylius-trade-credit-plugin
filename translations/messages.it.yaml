@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        placed_by: 'Effettuato da %name%'
+        account_days_policy_mode: '%days% giorni (fine mese secondo il metodo di pagamento)'
         trade_credit: 'Credito commerciale'
         trade_credit_accounts: 'Conti di credito commerciale'
         payment_terms_policies: 'Condizioni di pagamento'
@@ -28,6 +30,8 @@ tmonier_trade_credit:
         overdue_alert: '%amount% sono scaduti. Paghi questi ordini al più presto.'
         invoice_pdf: 'Fattura (PDF)'
         legal_warning:
+            end_of_month_channel: 'Queste condizioni superano %end_of_month_days% giorni fine mese, il limite configurato per il canale %channel% (limiti settoriali, L441-11). Verifichi le regole applicabili.'
+            net_channel: 'Queste condizioni superano %net_days% giorni, il limite configurato per il canale %channel% (limiti settoriali, L441-11). Verifichi le regole applicabili.'
             net: 'Queste condizioni superano %net_days% giorni dalla data della fattura, il massimo legale usuale tra professionisti in Francia (L441-10). Verifichi le regole applicabili.'
             end_of_month: 'Queste condizioni superano %end_of_month_days% giorni fine mese, il massimo legale usuale tra professionisti in Francia (L441-10). Verifichi le regole applicabili.'
     form:

@@ -18,7 +18,8 @@ class OrderPaymentTerms implements OrderPaymentTermsInterface
 
     protected ?PaymentMethodInterface $paymentMethod = null;
 
-    protected int $amount = 0;
+    /** BIGINT: a string with DBAL 3. */
+    protected int|string $amount = 0;
 
     protected string $currencyCode = '';
 
@@ -64,7 +65,7 @@ class OrderPaymentTerms implements OrderPaymentTermsInterface
 
     public function getAmount(): int
     {
-        return $this->amount;
+        return (int) $this->amount;
     }
 
     public function getCurrencyCode(): string

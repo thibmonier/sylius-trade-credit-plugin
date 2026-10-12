@@ -1,5 +1,6 @@
 tmonier_trade_credit:
     flash:
+        policy_has_open_items: 'Diese Zahlungsbedingungen haben offene Posten: Begleichen oder freigeben, bevor Sie die Bedingungen löschen oder ihre Zahlungsart ändern (deaktivieren Sie sie, um neue Bestellungen zu stoppen).'
         marked_as_paid: 'Die Bestellung wurde als bezahlt markiert.'
         cannot_mark_as_paid: 'Diese Bestellung kann nicht als bezahlt markiert werden (keine offene Zahlung oder bereits bezahlt).'
     payment_entry:

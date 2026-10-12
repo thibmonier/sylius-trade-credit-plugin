@@ -59,8 +59,8 @@ final class TranslationsTest extends TestCase
         }
 
         // Prefixes completed at runtime ('tmonier_trade_credit.terms_state.' ~ state) are skipped.
-        // Service ids (tmonier_trade_credit.form.type.*) are not translation keys.
-        $used = array_filter($used, static fn (string $key): bool => !str_starts_with($key, 'tmonier_trade_credit.form.type.'), \ARRAY_FILTER_USE_KEY);
+        // Service ids (tmonier_trade_credit.form.type.*) and event names are not translation keys.
+        $used = array_filter($used, static fn (string $key): bool => !str_starts_with($key, 'tmonier_trade_credit.form.type.') && !str_ends_with($key, '.pre_delete') && !str_ends_with($key, '.pre_update'), \ARRAY_FILTER_USE_KEY);
         $missing = array_filter(
             array_diff(array_keys($used), $known),
             static fn (string $key): bool => [] === array_filter($known, static fn (string $knownKey): bool => str_starts_with($knownKey, $key . '.')),

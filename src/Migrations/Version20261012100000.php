@@ -25,8 +25,8 @@ final class Version20261012100000 extends AbstractMigration
         $account->addColumn('owner_type', Types::STRING, ['length' => 32]);
         $account->addColumn('owner_identifier', Types::STRING, ['length' => 64]);
         $account->addColumn('currency_code', Types::STRING, ['length' => 3]);
-        $account->addColumn('credit_limit', Types::INTEGER);
-        $account->addColumn('committed_amount', Types::INTEGER);
+        $account->addColumn('credit_limit', Types::BIGINT);
+        $account->addColumn('committed_amount', Types::BIGINT);
         $account->addColumn('allow_exceed', Types::BOOLEAN);
         $account->addColumn('credit_hold', Types::BOOLEAN);
         $account->addColumn('block_when_overdue', Types::BOOLEAN);
@@ -56,7 +56,7 @@ final class Version20261012100000 extends AbstractMigration
         $terms->addColumn('order_id', Types::INTEGER);
         $terms->addColumn('account_id', Types::INTEGER);
         $terms->addColumn('payment_method_id', Types::INTEGER, ['notnull' => false]);
-        $terms->addColumn('amount', Types::INTEGER);
+        $terms->addColumn('amount', Types::BIGINT);
         $terms->addColumn('currency_code', Types::STRING, ['length' => 3]);
         $terms->addColumn('net_days', Types::INTEGER);
         $terms->addColumn('end_of_month_mode', Types::STRING, ['length' => 32]);
@@ -81,8 +81,8 @@ final class Version20261012100000 extends AbstractMigration
         $ledger->addColumn('order_id', Types::INTEGER, ['notnull' => false]);
         $ledger->addColumn('order_payment_terms_id', Types::GUID, ['notnull' => false]);
         $ledger->addColumn('type', Types::STRING, ['length' => 16]);
-        $ledger->addColumn('amount', Types::INTEGER);
-        $ledger->addColumn('committed_after', Types::INTEGER);
+        $ledger->addColumn('amount', Types::BIGINT);
+        $ledger->addColumn('committed_after', Types::BIGINT);
         $ledger->addColumn('reason', Types::STRING, ['length' => 64, 'notnull' => false]);
         $ledger->addColumn('created_at', Types::DATETIME_IMMUTABLE);
         $ledger->setPrimaryKey(['id']);

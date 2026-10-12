@@ -6,6 +6,7 @@ namespace Tmonier\SyliusTradeCreditPlugin\Repository;
 
 use Doctrine\ORM\QueryBuilder;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
@@ -20,6 +21,8 @@ interface OrderPaymentTermsRepositoryInterface extends RepositoryInterface
 
     /** @return list<OrderPaymentTermsInterface> reserved terms of the account, oldest due date first */
     public function findOpenByAccount(TradeCreditAccountInterface $account): array;
+
+    public function countReservedForPaymentMethod(PaymentMethodInterface $paymentMethod): int;
 
     public function hasOverdue(TradeCreditAccountInterface $account, \DateTimeInterface $today): bool;
 

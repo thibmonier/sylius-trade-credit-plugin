@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        placed_by: 'Geplaatst door %name%'
+        account_days_policy_mode: '%days% dagen (einde maand volgens de betaalmethode)'
         trade_credit: 'Handelskrediet'
         trade_credit_accounts: 'Handelskredietrekeningen'
         payment_terms_policies: 'Betalingsvoorwaarden'
@@ -28,6 +30,8 @@ tmonier_trade_credit:
         overdue_alert: '%amount% is vervallen. Betaal deze bestellingen zo snel mogelijk.'
         invoice_pdf: 'Factuur (PDF)'
         legal_warning:
+            end_of_month_channel: 'Deze voorwaarden overschrijden %end_of_month_days% dagen einde maand, de grens ingesteld voor kanaal %channel% (sectorgrenzen, L441-11). Controleer de geldende regels.'
+            net_channel: 'Deze voorwaarden overschrijden %net_days% dagen, de grens ingesteld voor kanaal %channel% (sectorgrenzen, L441-11). Controleer de geldende regels.'
             net: 'Deze voorwaarden overschrijden %net_days% dagen na factuurdatum, het gebruikelijke wettelijke maximum tussen bedrijven in Frankrijk (L441-10). Controleer de geldende regels.'
             end_of_month: 'Deze voorwaarden overschrijden %end_of_month_days% dagen einde maand, het gebruikelijke wettelijke maximum tussen bedrijven in Frankrijk (L441-10). Controleer de geldende regels.'
     form:

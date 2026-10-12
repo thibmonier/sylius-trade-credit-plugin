@@ -11,7 +11,7 @@
 
         <id name="id" column="id" type="guid" />
 
-        <field name="amount" column="amount" type="integer" />
+        <field name="amount" column="amount" type="bigint" />
         <field name="currencyCode" column="currency_code" type="string" length="3" />
         <field name="netDays" column="net_days" type="integer" />
         <field name="endOfMonthMode" column="end_of_month_mode" type="string" length="32" />

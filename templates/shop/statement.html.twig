@@ -56,7 +56,14 @@
                                 <tbody>
                                     {% for item in statement.items %}
                                         <tr {{ sylius_test_html_attribute('tmonier-open-item', item.orderNumber) }}>
-                                            <td class="fw-semibold"><a href="{{ path('sylius_shop_account_order_show', {'number': item.orderNumber}) }}">#{{ item.orderNumber }}</a></td>
+                                            <td class="fw-semibold">
+                                                {% if item.placedByViewer %}
+                                                    <a href="{{ path('sylius_shop_account_order_show', {'number': item.orderNumber}) }}">#{{ item.orderNumber }}</a>
+                                                {% else %}
+                                                    #{{ item.orderNumber }}
+                                                    <div class="small text-body-secondary fw-normal">{{ 'tmonier_trade_credit.ui.placed_by'|trans({'%name%': item.buyerName}) }}</div>
+                                                {% endif %}
+                                            </td>
                                             <td>{{ item.orderDate|date('Y-m-d') }}</td>
                                             <td>{{ item.amount|sylius_format_money(currency, app.request.locale) }}</td>
                                             <td>

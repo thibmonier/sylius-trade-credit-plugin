@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        placed_by: 'Passée par %name%'
+        account_days_policy_mode: '%days% jours (fin de mois selon le moyen de paiement)'
         trade_credit: 'Paiement à terme'
         trade_credit_accounts: 'Comptes de paiement à terme'
         payment_terms_policies: 'Conditions de paiement'
@@ -28,6 +30,8 @@ tmonier_trade_credit:
         overdue_alert: '%amount% sont échus. Merci de régler ces commandes au plus vite.'
         invoice_pdf: 'Facture (PDF)'
         legal_warning:
+            end_of_month_channel: 'Ces conditions dépassent %end_of_month_days% jours fin de mois, la limite configurée pour le canal %channel% (plafonds sectoriels, L441-11). Vérifiez les règles applicables.'
+            net_channel: 'Ces conditions dépassent %net_days% jours, la limite configurée pour le canal %channel% (plafonds sectoriels, L441-11). Vérifiez les règles applicables.'
             net: 'Ces conditions dépassent %net_days% jours à compter de la date de facture, le maximum légal usuel entre professionnels (L441-10). Vérifiez les règles applicables.'
             end_of_month: 'Ces conditions dépassent %end_of_month_days% jours fin de mois, le maximum légal usuel entre professionnels (L441-10). Vérifiez les règles applicables.'
     form:

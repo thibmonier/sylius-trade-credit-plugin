@@ -216,9 +216,11 @@ final class ReservationTest extends KernelTestCase
         self::assertSame([OrderPaymentTermsInterface::STATE_RELEASED, OrderPaymentTermsInterface::STATE_RESERVED], $this->termsStates($order));
     }
 
+    /** No other method: the new payment keeps the method on account, refused, without reservation (the pay routes ask for another one). */
     public function testANewPaymentOnAccountBeyondTheLimitIsKeptWithoutReservation(): void
     {
         $method = $this->onAccountMethod();
+        $this->connection()->executeStatement('UPDATE sylius_payment_method SET is_enabled = ? WHERE id <> ?', [false, $method->getId()], [\Doctrine\DBAL\ParameterType::BOOLEAN]);
         $customer = $this->customer();
         $account = $this->account($customer);
         $order = $this->order('completed', $method, $customer);
@@ -233,12 +235,11 @@ final class ReservationTest extends KernelTestCase
         self::assertSame([OrderPaymentTermsInterface::STATE_RELEASED], $this->termsStates($order));
         $newPayment = $order->getLastPayment(PaymentInterface::STATE_NEW);
         self::assertNotNull($newPayment);
+        self::assertNotSame($payment, $newPayment);
+        self::assertSame($method, $newPayment->getMethod());
         $checker = $this->service(\Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodEligibilityCheckerInterface::class);
         self::assertInstanceOf(\Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodEligibilityCheckerInterface::class, $checker);
-        $paymentMethod = $newPayment->getMethod();
-        self::assertNotNull($paymentMethod);
-        // Either replaced by an eligible method, or refused (the pay routes then ask for another one).
-        self::assertTrue($paymentMethod !== $method || null !== $checker->getIneligibility($paymentMethod, $newPayment));
+        self::assertSame('tmonier_trade_credit.payment_method.limit_exceeded', $checker->getIneligibility($method, $newPayment)?->getMessage());
     }
 
     public function testSwitchingThePaymentMethodAfterCheckoutReleasesAndReserves(): void

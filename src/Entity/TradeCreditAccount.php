@@ -20,9 +20,10 @@ class TradeCreditAccount implements TradeCreditAccountInterface
 
     protected ?string $currencyCode = null;
 
-    protected int $creditLimit = 0;
+    /** BIGINT: a string with DBAL 3. */
+    protected int|string $creditLimit = 0;
 
-    protected int $committedAmount = 0;
+    protected int|string $committedAmount = 0;
 
     protected bool $allowExceed = false;
 
@@ -76,7 +77,7 @@ class TradeCreditAccount implements TradeCreditAccountInterface
 
     public function getCreditLimit(): int
     {
-        return $this->creditLimit;
+        return (int) $this->creditLimit;
     }
 
     public function setCreditLimit(int $creditLimit): void
@@ -86,12 +87,12 @@ class TradeCreditAccount implements TradeCreditAccountInterface
 
     public function getCommittedAmount(): int
     {
-        return $this->committedAmount;
+        return (int) $this->committedAmount;
     }
 
     public function getAvailableAmount(): int
     {
-        return $this->creditLimit - $this->committedAmount;
+        return $this->getCreditLimit() - $this->getCommittedAmount();
     }
 
     public function isAllowExceed(): bool
@@ -150,7 +151,8 @@ class TradeCreditAccount implements TradeCreditAccountInterface
             return $default;
         }
 
-        return new PaymentTerms($this->netDays, $this->getEndOfMonthMode() ?? EndOfMonthMode::None);
+        // No mode of its own ("terms of the payment method"): the end-of-month mode of the policy.
+        return new PaymentTerms($this->netDays, $this->getEndOfMonthMode() ?? $default->endOfMonthMode);
     }
 
     public function isEnabled(): bool

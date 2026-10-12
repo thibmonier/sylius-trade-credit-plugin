@@ -6,6 +6,7 @@ namespace Symfony\Component\DependencyInjection\Loader\Configurator;
 
 use Sylius\Bundle\GridBundle\Form\Type\Filter\BooleanFilterType;
 use Tmonier\SyliusTradeCreditPlugin\Account\BusinessCustomerChecker;
+use Tmonier\SyliusTradeCreditPlugin\Account\OrderOwnerChecker;
 use Tmonier\SyliusTradeCreditPlugin\Account\PaymentTermsPolicyProvider;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
 use Tmonier\SyliusTradeCreditPlugin\Api\TradeCreditStatementProvider;
@@ -13,6 +14,7 @@ use Tmonier\SyliusTradeCreditPlugin\Command\RecalculateCommand;
 use Tmonier\SyliusTradeCreditPlugin\Controller\Admin\MarkAsPaidController;
 use Tmonier\SyliusTradeCreditPlugin\Controller\Shop\StatementController;
 use Tmonier\SyliusTradeCreditPlugin\EventListener\PaymentMethodSwitchListener;
+use Tmonier\SyliusTradeCreditPlugin\EventListener\PaymentTermsPolicyGuardListener;
 use Tmonier\SyliusTradeCreditPlugin\EventListener\ReservationExceptionListener;
 use Tmonier\SyliusTradeCreditPlugin\EventListener\TradeCreditWorkflowListener;
 use Tmonier\SyliusTradeCreditPlugin\Factory\TradeCreditAccountFactory;
@@ -22,6 +24,7 @@ use Tmonier\SyliusTradeCreditPlugin\Form\Type\TradeCreditAccountType;
 use Tmonier\SyliusTradeCreditPlugin\Grid\Filter\OverdueFilter;
 use Tmonier\SyliusTradeCreditPlugin\Menu\AccountMenuListener;
 use Tmonier\SyliusTradeCreditPlugin\Menu\AdminMenuListener;
+use Tmonier\SyliusTradeCreditPlugin\OrderHold\LostReservationCancellationExclusion;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\OnAccountPaymentEntryBlocker;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\ReservedOrdersQueryExtension;
 use Tmonier\SyliusTradeCreditPlugin\OrderHold\TradeCreditEligibilityChecker;
@@ -89,6 +92,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.provider.account'),
             service('tmonier_trade_credit.provider.payment_terms_policy'),
             service('tmonier_trade_credit.repository.order_payment_terms'),
+            service('tmonier_trade_credit.checker.order_owner'),
             service('clock'),
             service('logger'),
             param('tmonier_trade_credit.model.account.class'),
@@ -107,6 +111,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.provider.payment_terms_policy'),
             service('tmonier_trade_credit.provider.account'),
             service('tmonier_trade_credit.checker.business_customer'),
+            service('tmonier_trade_credit.checker.order_owner'),
             service('tmonier_trade_credit.repository.order_payment_terms'),
             service('sylius.formatter.money'),
             service('clock'),
@@ -137,8 +142,9 @@ return static function (ContainerConfigurator $container): void {
         ])
         ->tag('kernel.event_listener', ['event' => 'workflow.sylius_order_checkout.transition.complete', 'method' => 'onCheckoutComplete'])
         ->tag('kernel.event_listener', ['event' => 'workflow.sylius_payment.completed.complete', 'method' => 'onPaymentCompleted'])
-        ->tag('kernel.event_listener', ['event' => 'workflow.sylius_payment.completed.fail', 'method' => 'onPaymentFailed'])
-        ->tag('kernel.event_listener', ['event' => 'workflow.sylius_payment.completed.cancel', 'method' => 'onPaymentCancelled'])
+        // Before the core reprocesses the order (priority 100) and creates the next payment.
+        ->tag('kernel.event_listener', ['event' => 'workflow.sylius_payment.completed.fail', 'method' => 'onPaymentFailed', 'priority' => 200])
+        ->tag('kernel.event_listener', ['event' => 'workflow.sylius_payment.completed.cancel', 'method' => 'onPaymentCancelled', 'priority' => 200])
         ->tag('kernel.event_listener', ['event' => 'workflow.sylius_order.completed.cancel', 'method' => 'onOrderCancelled'])
     ;
 
@@ -152,6 +158,27 @@ return static function (ContainerConfigurator $container): void {
         ->tag('doctrine.event_listener', ['event' => 'onFlush'])
         ->tag('monolog.logger', ['channel' => 'tmonier_trade_credit'])
     ;
+
+    $services
+        ->set('tmonier_trade_credit.listener.payment_terms_policy_guard', PaymentTermsPolicyGuardListener::class)
+        ->args([
+            service('tmonier_trade_credit.repository.order_payment_terms'),
+            service('doctrine.orm.entity_manager'),
+        ])
+        ->tag('kernel.event_listener', ['event' => 'tmonier_trade_credit.payment_terms_policy.pre_delete', 'method' => 'onPreDelete'])
+        ->tag('kernel.event_listener', ['event' => 'tmonier_trade_credit.payment_terms_policy.pre_update', 'method' => 'onPreUpdate'])
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.order_hold.lost_reservation_exclusion', LostReservationCancellationExclusion::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            param('tmonier_trade_credit.model.order_payment_terms.class'),
+        ])
+        ->tag('tmonier_order_hold.unpaid_order_cancellation_exclusion')
+    ;
+
+    $services->set('tmonier_trade_credit.checker.order_owner', OrderOwnerChecker::class);
 
     $services
         ->set('tmonier_trade_credit.listener.reservation_exception', ReservationExceptionListener::class)
@@ -255,6 +282,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.checker.legal_terms'),
             service('clock'),
             service('sylius.repository.customer'),
+            service('tmonier_trade_credit.repository.payment_terms_policy'),
         ])
         ->tag('twig.extension')
     ;
@@ -263,7 +291,6 @@ return static function (ContainerConfigurator $container): void {
         ->set('tmonier_trade_credit.command.recalculate', RecalculateCommand::class)
         ->args([
             service('tmonier_trade_credit.repository.account'),
-            service('tmonier_trade_credit.repository.order_payment_terms'),
             service('tmonier_trade_credit.reserver'),
         ])
         ->tag('console.command')

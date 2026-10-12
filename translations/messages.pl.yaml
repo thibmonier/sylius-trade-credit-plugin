@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        placed_by: 'Złożone przez %name%'
+        account_days_policy_mode: '%days% dni (koniec miesiąca wg metody płatności)'
         trade_credit: 'Kredyt kupiecki'
         trade_credit_accounts: 'Konta kredytu kupieckiego'
         payment_terms_policies: 'Warunki płatności'
@@ -28,6 +30,8 @@ tmonier_trade_credit:
         overdue_alert: '%amount% jest zaległe. Prosimy o jak najszybszą płatność.'
         invoice_pdf: 'Faktura (PDF)'
         legal_warning:
+            end_of_month_channel: 'Te warunki przekraczają %end_of_month_days% dni koniec miesiąca, limit ustawiony dla kanału %channel% (limity branżowe, L441-11). Sprawdź obowiązujące przepisy.'
+            net_channel: 'Te warunki przekraczają %net_days% dni, limit ustawiony dla kanału %channel% (limity branżowe, L441-11). Sprawdź obowiązujące przepisy.'
             net: 'Te warunki przekraczają %net_days% dni od daty faktury, zwykłe maksimum prawne między przedsiębiorcami we Francji (L441-10). Sprawdź obowiązujące przepisy.'
             end_of_month: 'Te warunki przekraczają %end_of_month_days% dni koniec miesiąca, zwykłe maksimum prawne między przedsiębiorcami we Francji (L441-10). Sprawdź obowiązujące przepisy.'
     form:

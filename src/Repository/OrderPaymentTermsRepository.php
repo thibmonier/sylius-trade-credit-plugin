@@ -7,8 +7,11 @@ namespace Tmonier\SyliusTradeCreditPlugin\Repository;
 use Doctrine\ORM\QueryBuilder;
 use Sylius\Bundle\ResourceBundle\Doctrine\ORM\EntityRepository;
 use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\OrderPaymentStates;
+use Sylius\Component\Payment\Model\PaymentMethodInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 
 class OrderPaymentTermsRepository extends EntityRepository implements OrderPaymentTermsRepositoryInterface
 {
@@ -62,15 +65,38 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
         return $terms;
     }
 
+    public function countReservedForPaymentMethod(PaymentMethodInterface $paymentMethod): int
+    {
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->andWhere('t.paymentMethod = :method')
+            ->andWhere('t.state = :state')
+            ->setParameter('method', $paymentMethod)
+            ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
+            ->getQuery()
+            ->getSingleScalarResult()
+        ;
+    }
+
+    /**
+     * An open item past its due date, or an order that left payment on account (switched to
+     * another method, payment failed or cancelled) and is still unpaid after the due date of its
+     * terms: switching methods never clears an overdue item.
+     */
     public function hasOverdue(TradeCreditAccountInterface $account, \DateTimeInterface $today): bool
     {
         return null !== $this->createQueryBuilder('t')
             ->select('t.id')
+            ->innerJoin('t.order', 'o')
             ->andWhere('t.account = :account')
-            ->andWhere('t.state = :state')
             ->andWhere('t.dueDate < :today')
+            ->andWhere('t.state = :reserved OR (t.state = :released AND t.closingReason IN (:lostReasons) AND o.state = :orderNew AND o.paymentState NOT IN (:paidStates))')
             ->setParameter('account', $account)
-            ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
+            ->setParameter('reserved', OrderPaymentTermsInterface::STATE_RESERVED)
+            ->setParameter('released', OrderPaymentTermsInterface::STATE_RELEASED)
+            ->setParameter('lostReasons', TradeCreditReserver::LOST_RESERVATION_REASONS)
+            ->setParameter('orderNew', OrderInterface::STATE_NEW)
+            ->setParameter('paidStates', [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED])
             ->setParameter('today', \DateTimeImmutable::createFromInterface($today)->setTime(0, 0), 'date_immutable')
             ->setMaxResults(1)
             ->getQuery()

@@ -1,5 +1,6 @@
 tmonier_trade_credit:
     flash:
+        policy_has_open_items: 'Deze betalingsvoorwaarden hebben openstaande posten: vereffen of geef ze vrij voordat u de voorwaarden verwijdert of hun betaalmethode wijzigt (schakel ze uit om nieuwe bestellingen te stoppen).'
         marked_as_paid: 'De bestelling is als betaald gemarkeerd.'
         cannot_mark_as_paid: 'Deze bestelling kan niet als betaald gemarkeerd worden (geen openstaande betaling of al betaald).'
     payment_entry:

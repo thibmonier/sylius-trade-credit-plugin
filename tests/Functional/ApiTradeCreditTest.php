@@ -53,6 +53,29 @@ final class ApiTradeCreditTest extends WebTestCase
         self::assertFalse($items[0]['overdue'] ?? null);
     }
 
+    /** Same figures as the shop page: never a negative available amount, suspension exposed. */
+    public function testTheStatementOfASuspendedAccountBeyondItsLimit(): void
+    {
+        $method = $this->onAccountMethod();
+        $customer = $this->customer(true);
+        $account = $this->account($customer, 100000, true);
+        $order = $this->order('completed', $method, $customer);
+        $account->setCreditLimit(1);
+        $account->setEnabled(false);
+        $this->entityManager()->flush();
+
+        $data = $this->json('GET', '/api/v2/shop/trade-credit/statement', null, $customer);
+
+        self::assertResponseIsSuccessful();
+        self::assertSame(0, $data['availableAmount'] ?? null);
+        self::assertSame($order->getTotal(), $data['committedAmount'] ?? null);
+        self::assertFalse($data['enabled'] ?? null);
+        $items = $data['openItems'] ?? null;
+        self::assertIsArray($items);
+        self::assertIsArray($items[0] ?? null);
+        self::assertTrue($items[0]['placedByYou'] ?? null);
+    }
+
     public function testTheStatementRequiresAuthentication(): void
     {
         $this->json('GET', '/api/v2/shop/trade-credit/statement');
@@ -74,7 +97,7 @@ final class ApiTradeCreditTest extends WebTestCase
         $this->account($customer, 100);
         $order = $this->order('shipping_selected', null, $customer);
 
-        $data = $this->json('GET', sprintf('/api/v2/shop/orders/%s/payments/%s/methods', (string) $order->getTokenValue(), $this->paymentId($order)));
+        $data = $this->json('GET', sprintf('/api/v2/shop/orders/%s/payments/%s/methods', (string) $order->getTokenValue(), $this->paymentId($order)), null, $customer);
 
         self::assertResponseIsSuccessful();
         $members = $data['hydra:member'] ?? $data['member'] ?? [];
@@ -96,7 +119,7 @@ final class ApiTradeCreditTest extends WebTestCase
             $connection->executeStatement('UPDATE tmonier_trade_credit_account SET committed_amount = credit_limit WHERE id = ?', [$accountId]);
         }, 100);
 
-        $data = $this->json('PATCH', sprintf('/api/v2/shop/orders/%s/complete', (string) $order->getTokenValue()), []);
+        $data = $this->json('PATCH', sprintf('/api/v2/shop/orders/%s/complete', (string) $order->getTokenValue()), [], $customer);
 
         self::assertResponseStatusCodeSame(422);
         self::assertStringContainsString('The order total exceeds your available credit', (string) json_encode($data));
@@ -112,7 +135,7 @@ final class ApiTradeCreditTest extends WebTestCase
         $account->setCreditLimit(100);
         $this->entityManager()->flush();
 
-        $data = $this->json('PATCH', sprintf('/api/v2/shop/orders/%s/complete', (string) $order->getTokenValue()), []);
+        $data = $this->json('PATCH', sprintf('/api/v2/shop/orders/%s/complete', (string) $order->getTokenValue()), [], $customer);
 
         self::assertResponseStatusCodeSame(422);
         self::assertStringContainsString('exceeds the credit available for', (string) json_encode($data));
@@ -131,7 +154,7 @@ final class ApiTradeCreditTest extends WebTestCase
                 'paymentId' => $this->paymentId($order),
                 'paymentMethodCode' => $method->getCode(),
                 'action' => $action,
-            ]);
+            ], $customer);
 
             self::assertResponseStatusCodeSame(422);
             self::assertStringContainsString('This order is paid on account', (string) json_encode($data));

@@ -37,15 +37,17 @@ final class TradeCreditStatementProvider implements ProviderInterface
             (string) $account->getCurrencyCode(),
             $account->getCreditLimit(),
             $account->getCommittedAmount(),
-            $account->getAvailableAmount(),
+            max(0, $account->getAvailableAmount()),
             $statement->getOverdueAmount(),
             $account->isCreditHold(),
+            $account->isEnabled(),
             array_map(static fn (StatementItem $item): array => [
                 'orderNumber' => $item->orderNumber,
                 'amount' => $item->amount,
                 'orderDate' => $item->orderDate->format('Y-m-d'),
                 'dueDate' => $item->dueDate->format('Y-m-d'),
                 'overdue' => $item->overdue,
+                'placedByYou' => $item->placedByViewer,
             ], $statement->items),
         );
     }

@@ -41,6 +41,7 @@ final class StatementBuilder
             if (!$order instanceof OrderInterface) {
                 continue;
             }
+            $placedByViewer = $order->getCustomer() === $customer;
             $items[] = new StatementItem(
                 $terms,
                 (string) $order->getNumber(),
@@ -49,7 +50,9 @@ final class StatementBuilder
                 \DateTimeImmutable::createFromInterface($order->getCheckoutCompletedAt() ?? $terms->getCreatedAt()),
                 $terms->getDueDate(),
                 $terms->isOverdue($today),
-                $this->invoiceUrl($order),
+                $placedByViewer ? $this->invoiceUrl($order) : null,
+                $placedByViewer,
+                $placedByViewer ? null : $order->getCustomer()?->getFullName(),
             );
         }
 

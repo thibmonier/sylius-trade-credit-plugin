@@ -9,7 +9,7 @@
     </div>
     {% set warning = tmonier_trade_credit_legal_warning(account) %}
     {% if warning %}
-        <div class="alert alert-warning" {{ sylius_test_html_attribute('tmonier-legal-warning') }}>{{ warning|trans(tmonier_trade_credit_legal_parameters()) }}</div>
+        <div class="alert alert-warning" {{ sylius_test_html_attribute('tmonier-legal-warning') }}>{{ warning.message|trans(warning.parameters) }}</div>
     {% endif %}
 {% endif %}
 <div class="row">

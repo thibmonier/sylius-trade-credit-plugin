@@ -18,9 +18,10 @@ class TradeCreditLedgerEntry implements TradeCreditLedgerEntryInterface
 
     protected string $type = self::TYPE_RESERVATION;
 
-    protected int $amount = 0;
+    /** BIGINT: strings with DBAL 3. */
+    protected int|string $amount = 0;
 
-    protected int $committedAfter = 0;
+    protected int|string $committedAfter = 0;
 
     protected ?string $reason = null;
 
@@ -58,12 +59,12 @@ class TradeCreditLedgerEntry implements TradeCreditLedgerEntryInterface
 
     public function getAmount(): int
     {
-        return $this->amount;
+        return (int) $this->amount;
     }
 
     public function getCommittedAfter(): int
     {
-        return $this->committedAfter;
+        return (int) $this->committedAfter;
     }
 
     public function getReason(): ?string

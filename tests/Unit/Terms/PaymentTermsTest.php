@@ -6,6 +6,7 @@ namespace Tests\Tmonier\SyliusTradeCreditPlugin\Unit\Terms;
 
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
+use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccount;
 use Tmonier\SyliusTradeCreditPlugin\Terms\EndOfMonthMode;
 use Tmonier\SyliusTradeCreditPlugin\Terms\LegalTermsChecker;
 use Tmonier\SyliusTradeCreditPlugin\Terms\PaymentTerms;
@@ -41,14 +42,33 @@ final class PaymentTermsTest extends TestCase
 
     public function testLegalWarnings(): void
     {
-        $checker = new LegalTermsChecker(60, 45, ['B2B_BUILDING' => ['net_days' => 30, 'end_of_month_days' => 30]]);
+        $checker = new LegalTermsChecker(60, 45, ['B2B_BUILDING' => ['net_days' => 30, 'end_of_month_days' => 30], 'OTHER' => ['net_days' => 50, 'end_of_month_days' => 40]]);
 
-        self::assertNull($checker->warning(new PaymentTerms(60)));
-        self::assertSame('tmonier_trade_credit.ui.legal_warning.net', $checker->warning(new PaymentTerms(61)));
-        self::assertNull($checker->warning(new PaymentTerms(45, EndOfMonthMode::DaysThenEndOfMonth)));
-        self::assertSame('tmonier_trade_credit.ui.legal_warning.end_of_month', $checker->warning(new PaymentTerms(46, EndOfMonthMode::EndOfMonthThenDays)));
-        self::assertSame('tmonier_trade_credit.ui.legal_warning.net', $checker->warning(new PaymentTerms(45), 'B2B_BUILDING'));
-        self::assertSame(['net_days' => 30, 'end_of_month_days' => 30], $checker->limits('B2B_BUILDING'));
-        self::assertSame(['net_days' => 60, 'end_of_month_days' => 45], $checker->limits('OTHER'));
+        self::assertNull($checker->warning(new PaymentTerms(60), []));
+        self::assertSame('tmonier_trade_credit.ui.legal_warning.net', $checker->warning(new PaymentTerms(61), [])['message'] ?? null);
+        self::assertNull($checker->warning(new PaymentTerms(45, EndOfMonthMode::DaysThenEndOfMonth), []));
+        self::assertSame('tmonier_trade_credit.ui.legal_warning.end_of_month', $checker->warning(new PaymentTerms(46, EndOfMonthMode::EndOfMonthThenDays), [])['message'] ?? null);
+
+        // The cap of a channel applies to the policies of its payment methods.
+        $warning = $checker->warning(new PaymentTerms(45), ['B2B_BUILDING']);
+        self::assertNotNull($warning);
+        self::assertSame('tmonier_trade_credit.ui.legal_warning.net_channel', $warning['message']);
+        self::assertSame(['%net_days%' => 30, '%end_of_month_days%' => 30, '%channel%' => 'B2B_BUILDING'], $warning['parameters']);
+        self::assertNull($checker->warning(new PaymentTerms(45), ['FASHION_WEB']));
+
+        // Without channel (accounts): the strictest configured cap.
+        self::assertSame('B2B_BUILDING', $checker->warning(new PaymentTerms(55))['parameters']['%channel%'] ?? null);
+        self::assertSame('B2B_BUILDING', $checker->warning(new PaymentTerms(35, EndOfMonthMode::DaysThenEndOfMonth))['parameters']['%channel%'] ?? null);
+    }
+
+    public function testAnAccountWithoutModeUsesTheModeOfThePolicy(): void
+    {
+        $account = new TradeCreditAccount();
+        $account->setNetDays(30);
+
+        $terms = $account->getTerms(new PaymentTerms(45, EndOfMonthMode::DaysThenEndOfMonth));
+
+        self::assertSame(30, $terms->netDays);
+        self::assertSame(EndOfMonthMode::DaysThenEndOfMonth, $terms->endOfMonthMode);
     }
 }

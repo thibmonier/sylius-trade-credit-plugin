@@ -157,4 +157,33 @@ final class AdminTradeCreditTest extends WebTestCase
         self::assertInstanceOf(PaymentTermsPolicyInterface::class, $policy);
         self::assertSame(45, $policy->getNetDays());
     }
+
+    public function testAPolicyWithOpenItemsCanBeNeitherDeletedNorMovedToAnotherMethod(): void
+    {
+        $method = $this->onAccountMethod();
+        $other = $this->paymentMethod('Pay later');
+        $customer = $this->customer();
+        $this->account($customer);
+        $this->order('completed', $method, $customer);
+        $policy = $this->entityManager()->getRepository(PaymentTermsPolicyInterface::class)->findOneBy(['paymentMethod' => $method]);
+        self::assertInstanceOf(PaymentTermsPolicyInterface::class, $policy);
+        $path = sprintf('/admin/trade-credit/payment-terms-policies/%s', self::idOf($policy));
+
+        $crawler = $this->client->request('GET', '/admin/trade-credit/payment-terms-policies/');
+        $delete = $crawler->filter(sprintf('form[action="%s"]', $path));
+        self::assertGreaterThan(0, $delete->count());
+        $this->client->submit($delete->first()->form());
+        self::assertResponseRedirects();
+
+        $crawler = $this->client->request('GET', sprintf('%s/edit', $path));
+        $form = $crawler->filter('form[name="tmonier_trade_credit_payment_terms_policy"]')->form([
+            'tmonier_trade_credit_payment_terms_policy[paymentMethod]' => self::idOf($other),
+        ]);
+        $this->client->submit($form);
+
+        $this->entityManager()->clear();
+        $policy = $this->entityManager()->getRepository(PaymentTermsPolicyInterface::class)->find(self::idOf($policy));
+        self::assertInstanceOf(PaymentTermsPolicyInterface::class, $policy, 'Not deleted');
+        self::assertSame($method->getId(), $policy->getPaymentMethod()?->getId(), 'Still the method of its open items');
+    }
 }

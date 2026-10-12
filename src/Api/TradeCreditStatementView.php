@@ -8,7 +8,10 @@ namespace Tmonier\SyliusTradeCreditPlugin\Api;
 final class TradeCreditStatementView
 {
     /**
-     * @param list<array{orderNumber: string, amount: int, orderDate: string, dueDate: string, overdue: bool}> $openItems
+     * `availableAmount` is never negative (an account allowed to exceed its limit shows 0);
+     * `enabled` false or `creditHold` true: payment on account is not available.
+     *
+     * @param list<array{orderNumber: string, amount: int, orderDate: string, dueDate: string, overdue: bool, placedByYou: bool}> $openItems
      */
     public function __construct(
         public readonly string $id,
@@ -18,6 +21,7 @@ final class TradeCreditStatementView
         public readonly int $availableAmount,
         public readonly int $overdueAmount,
         public readonly bool $creditHold,
+        public readonly bool $enabled,
         public readonly array $openItems,
     ) {
     }

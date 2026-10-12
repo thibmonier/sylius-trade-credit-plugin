@@ -1,5 +1,6 @@
 tmonier_trade_credit:
     flash:
+        policy_has_open_items: 'Te warunki płatności mają otwarte pozycje: rozlicz je lub zwolnij przed usunięciem warunków lub zmianą metody płatności (wyłącz je, aby zatrzymać nowe zamówienia).'
         marked_as_paid: 'Zamówienie oznaczono jako opłacone.'
         cannot_mark_as_paid: 'Nie można oznaczyć zamówienia jako opłaconego (brak oczekującej płatności lub już opłacone).'
     payment_entry:

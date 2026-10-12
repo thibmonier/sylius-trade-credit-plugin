@@ -1,5 +1,6 @@
 tmonier_trade_credit:
     flash:
+        policy_has_open_items: 'Estas condiciones de pago tienen partidas abiertas: páguelas o libérelas antes de eliminar las condiciones o cambiar su método de pago (desactívelas para detener nuevos pedidos).'
         marked_as_paid: 'El pedido se ha marcado como pagado.'
         cannot_mark_as_paid: 'Este pedido no se puede marcar como pagado (sin pago pendiente o ya pagado).'
     payment_entry:

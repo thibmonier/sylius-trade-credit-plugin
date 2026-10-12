@@ -1,5 +1,6 @@
 tmonier_trade_credit:
     flash:
+        policy_has_open_items: 'Queste condizioni di pagamento hanno partite aperte: le saldi o le rilasci prima di eliminare le condizioni o cambiarne il metodo di pagamento (le disattivi per fermare nuovi ordini).'
         marked_as_paid: 'L''ordine è stato segnato come pagato.'
         cannot_mark_as_paid: 'Questo ordine non può essere segnato come pagato (nessun pagamento in sospeso o già pagato).'
     payment_entry:

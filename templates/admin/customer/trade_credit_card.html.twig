@@ -31,12 +31,18 @@
                 {% if account.creditHold %}<span class="badge bg-danger-lt">{{ 'tmonier_trade_credit.ui.credit_hold'|trans }}</span>{% endif %}
                 {% if account.allowExceed %}<span class="badge bg-yellow-lt">{{ 'tmonier_trade_credit.form.allow_exceed'|trans }}</span>{% endif %}
                 {% if account.netDays is not null %}
-                    <span class="badge bg-blue-lt">{{ ('tmonier_trade_credit.end_of_month_mode_short.' ~ (account.endOfMonthMode ? account.endOfMonthMode.value : 'none'))|trans({'%days%': account.netDays}) }}</span>
+                    <span class="badge bg-blue-lt">
+                        {% if account.endOfMonthMode %}
+                            {{ ('tmonier_trade_credit.end_of_month_mode_short.' ~ account.endOfMonthMode.value)|trans({'%days%': account.netDays}) }}
+                        {% else %}
+                            {{ 'tmonier_trade_credit.ui.account_days_policy_mode'|trans({'%days%': account.netDays}) }}
+                        {% endif %}
+                    </span>
                 {% endif %}
             </div>
             {% set warning = tmonier_trade_credit_legal_warning(account) %}
             {% if warning %}
-                <div class="alert alert-warning py-2">{{ warning|trans(tmonier_trade_credit_legal_parameters()) }}</div>
+                <div class="alert alert-warning py-2">{{ warning.message|trans(warning.parameters) }}</div>
             {% endif %}
             {% set items = tmonier_trade_credit_open_items(account) %}
             {% if items is empty %}

@@ -15,8 +15,8 @@
         <field name="ownerType" column="owner_type" type="string" length="32" />
         <field name="ownerIdentifier" column="owner_identifier" type="string" length="64" />
         <field name="currencyCode" column="currency_code" type="string" length="3" />
-        <field name="creditLimit" column="credit_limit" type="integer" />
-        <field name="committedAmount" column="committed_amount" type="integer" />
+        <field name="creditLimit" column="credit_limit" type="bigint" />
+        <field name="committedAmount" column="committed_amount" type="bigint" />
         <field name="allowExceed" column="allow_exceed" type="boolean" />
         <field name="creditHold" column="credit_hold" type="boolean" />
         <field name="blockWhenOverdue" column="block_when_overdue" type="boolean" />

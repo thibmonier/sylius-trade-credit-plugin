@@ -100,7 +100,7 @@ trait TradeCreditTestTrait
         return $method;
     }
 
-    private function customer(bool $withAccount = false): CustomerInterface
+    private function customer(bool $withAccount = true): CustomerInterface
     {
         /** @var FactoryInterface<CustomerInterface> $factory */
         $factory = $this->service('sylius.factory.customer');
@@ -125,7 +125,7 @@ trait TradeCreditTestTrait
      * An order of `$customer` (a new guest customer by default) in the given checkout state:
      * `addressed`, `shipping_selected`, `payment_selected` or `completed`.
      */
-    private function order(string $checkoutState, ?PaymentMethodInterface $paymentMethod = null, ?CustomerInterface $customer = null): OrderInterface
+    private function order(string $checkoutState, ?PaymentMethodInterface $paymentMethod = null, ?CustomerInterface $customer = null, bool $guest = false): OrderInterface
     {
         $channel = $this->channel();
         /** @var FactoryInterface<OrderInterface> $orderFactory */
@@ -134,10 +134,10 @@ trait TradeCreditTestTrait
         $order->setChannel($channel);
         $order->setLocaleCode($this->localeCode());
         $order->setCurrencyCode((string) $channel->getBaseCurrency()?->getCode());
-        if (null !== $customer?->getUser()) {
+        if (!$guest && null !== $customer?->getUser()) {
             $order->setCustomerWithAuthorization($customer);
         } else {
-            $order->setCustomer($customer ?? $this->customer());
+            $order->setCustomer($customer ?? $this->customer(false));
         }
         $order->setTokenValue(bin2hex(random_bytes(10)));
 

@@ -10,21 +10,20 @@ use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
-use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Repository\TradeCreditAccountRepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 
 /**
- * Drift detection: the committed amount of each account must equal the sum of its reserved
- * open items. Dry run by default; `--apply` sets the committed amount and writes an adjustment
- * ledger entry.
+ * Drift detection: the committed amount of each account must equal the sum of its open
+ * reservations, and open reservations must belong to placed orders. Dry run by default;
+ * `--apply` releases the stale reservations and sets each drifted committed amount under the
+ * account lock (no race with live reservations), with an adjustment ledger entry.
  */
 #[AsCommand(name: 'tmonier:trade-credit:recalculate', description: 'Compare committed amounts with the open items of each trade credit account (dry run unless --apply)')]
 final class RecalculateCommand extends Command
 {
     public function __construct(
         private readonly TradeCreditAccountRepositoryInterface $accountRepository,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
         private readonly TradeCreditReserver $reserver,
     ) {
         parent::__construct();
@@ -32,43 +31,43 @@ final class RecalculateCommand extends Command
 
     protected function configure(): void
     {
-        $this->addOption('apply', null, InputOption::VALUE_NONE, 'Fix the committed amounts that drifted');
+        $this->addOption('apply', null, InputOption::VALUE_NONE, 'Release stale reservations and fix the committed amounts that drifted');
     }
 
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         $io = new SymfonyStyle($input, $output);
         $apply = (bool) $input->getOption('apply');
-        $reserved = $this->termsRepository->sumReservedByAccount();
+
+        $stale = $this->reserver->staleReservations($apply);
+        if ([] !== $stale) {
+            $io->warning(sprintf('%s reservation(s) of orders that are not placed (or cancelled): %s', $apply ? 'Released' : 'Found', implode(', ', $stale)));
+        }
 
         $rows = [];
         foreach ($this->accountRepository->findAll() as $account) {
-            $accountId = $account->getId();
-            $expected = null === $accountId ? 0 : ($reserved[$accountId] ?? 0);
-            $committed = $this->reserver->committedAmount($account);
-            if ($expected === $committed) {
-                continue;
-            }
-            $rows[] = [(string) $account->getId(), sprintf('%s:%s', (string) $account->getOwnerType(), (string) $account->getOwnerIdentifier()), $committed, $expected];
-            if ($apply) {
-                $this->reserver->adjust($account, $expected, 'recalculate');
+            $drift = $this->reserver->recalculate($account, $apply);
+            if (null !== $drift) {
+                $rows[] = [(string) $account->getId(), sprintf('%s:%s', (string) $account->getOwnerType(), (string) $account->getOwnerIdentifier()), $drift['committed'], $drift['expected']];
             }
         }
 
-        if ([] === $rows) {
+        if ([] === $rows && [] === $stale) {
             $io->success('No drift: every committed amount matches the open items.');
 
             return Command::SUCCESS;
         }
 
-        $io->table(['Account', 'Owner', 'Committed', 'Open items'], $rows);
+        if ([] !== $rows) {
+            $io->table(['Account', 'Owner', 'Committed', 'Open items'], $rows);
+        }
         if ($apply) {
             $io->success(sprintf('%d account(s) adjusted.', count($rows)));
 
             return Command::SUCCESS;
         }
 
-        $io->warning(sprintf('%d account(s) drifted. Run again with --apply to fix them.', count($rows)));
+        $io->warning('Run again with --apply to fix them.');
 
         return Command::FAILURE;
     }

@@ -18,8 +18,9 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 /**
  * Doctrine `onFlush`: payment method changes of placed orders, whatever the code path (shop
  * order page, API, admin):
- * - to payment on account: reserve (a refusal aborts the flush, so the change is not saved);
- * - from payment on account: release;
+ * - to payment on account: reserve (a refusal aborts the flush, so the change is not saved),
+ *   replacing the reservation of the previous on-account method with the same start date;
+ * - from payment on account (the reservation made for the previous method): release;
  * - new payment on account created after a failed or cancelled one: reserve (a refusal is only
  *   logged: the payment then needs another method).
  */
@@ -46,18 +47,16 @@ final class PaymentMethodSwitchListener
             }
             $old = $changeSet['method'][0] ?? null;
             $new = $changeSet['method'][1] ?? null;
-            $wasOnAccount = $old instanceof PaymentMethodInterface && $this->policyProvider->isOnAccount($old);
-            $isOnAccount = $new instanceof PaymentMethodInterface && $this->policyProvider->isOnAccount($new);
             $order = $entity->getOrder();
-            if (!$order instanceof OrderInterface || $wasOnAccount === $isOnAccount) {
+            if (!$order instanceof OrderInterface) {
                 continue;
             }
 
-            if ($wasOnAccount) {
-                $this->reserver->close($order, OrderPaymentTermsInterface::STATE_RELEASED, TradeCreditReserver::REASON_PAYMENT_METHOD_CHANGED, false);
-            }
-            if ($new instanceof PaymentMethodInterface && $isOnAccount) {
+            if ($new instanceof PaymentMethodInterface && $this->policyProvider->isOnAccount($new)) {
+                // Replaces the reservation of another on-account method, keeps the start date.
                 $this->reserver->reserve($order, $new, false);
+            } elseif ($old instanceof PaymentMethodInterface) {
+                $this->reserver->close($order, OrderPaymentTermsInterface::STATE_RELEASED, TradeCreditReserver::REASON_PAYMENT_METHOD_CHANGED, false, $old);
             }
         }
 
