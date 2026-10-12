@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Grid\Filter;
 
 use Psr\Clock\ClockInterface;
+use Sylius\Bundle\GridBundle\Doctrine\ORM\DataSource;
 use Sylius\Component\Grid\Data\DataSourceInterface;
 use Sylius\Component\Grid\Filter\BooleanFilter;
 use Sylius\Component\Grid\Filtering\FilterInterface;
@@ -25,28 +26,28 @@ final class OverdueFilter implements FilterInterface
 
     public function apply(DataSourceInterface $dataSource, string $name, $data, array $options): void
     {
-        if (BooleanFilter::TRUE !== $data && BooleanFilter::FALSE !== $data) {
+        // Doctrine ORM grid driver: the left unpaid items are a subquery.
+        if (!$dataSource instanceof DataSource || (BooleanFilter::TRUE !== $data && BooleanFilter::FALSE !== $data)) {
             return;
         }
 
         $expressionBuilder = $dataSource->getExpressionBuilder();
         $now = $this->clock->now();
         $today = $now->format('Y-m-d');
-        $leftUnpaid = $this->termsRepository->findLeftUnpaidOverdueIds($now);
+        $queryBuilder = $dataSource->getQueryBuilder();
+        $leftUnpaid = $this->termsRepository->leftUnpaidOverdueCondition($queryBuilder, $queryBuilder->getRootAliases()[0], $now);
         if (BooleanFilter::TRUE === $data) {
-            $reserved = $expressionBuilder->andX(
+            $dataSource->restrict($expressionBuilder->orX($expressionBuilder->andX(
                 $expressionBuilder->equals('state', OrderPaymentTermsInterface::STATE_RESERVED),
                 $expressionBuilder->lessThan('dueDate', $today),
-            );
-            $dataSource->restrict([] === $leftUnpaid ? $reserved : $expressionBuilder->orX($reserved, $expressionBuilder->in('id', $leftUnpaid)));
+            ), $leftUnpaid));
 
             return;
         }
 
-        $notReserved = $expressionBuilder->orX(
+        $dataSource->restrict($expressionBuilder->andX($expressionBuilder->orX(
             $expressionBuilder->notEquals('state', OrderPaymentTermsInterface::STATE_RESERVED),
             $expressionBuilder->greaterThanOrEqual('dueDate', $today),
-        );
-        $dataSource->restrict([] === $leftUnpaid ? $notReserved : $expressionBuilder->andX($notReserved, $expressionBuilder->notIn('id', $leftUnpaid)));
+        ), sprintf('NOT (%s)', $leftUnpaid)));
     }
 }

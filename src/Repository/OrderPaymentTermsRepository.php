@@ -116,15 +116,13 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
         return $terms;
     }
 
-    public function findLeftUnpaidOverdueIds(\DateTimeInterface $today): array
+    public function leftUnpaidOverdueCondition(QueryBuilder $queryBuilder, string $termsAlias, \DateTimeInterface $today): string
     {
-        /** @var list<string> $ids */
-        $ids = array_map(static fn (mixed $id): string => is_scalar($id) ? (string) $id : '', $this->createLeftUnpaidQueryBuilder($today)
-            ->select('t.id')
-            ->getQuery()
-            ->getSingleColumnResult());
+        // Unique aliases per call (the state and overdue filters may both add the condition).
+        $prefix = sprintf('tclu%d_', count($queryBuilder->getParameters()));
+        $subQuery = $this->createLeftUnpaidQueryBuilder($today, $prefix, $this->getEntityManager()->createQueryBuilder(), $queryBuilder)->select($prefix . 't.id');
 
-        return $ids;
+        return sprintf('%s.id IN (%s)', $termsAlias, $subQuery->getDQL());
     }
 
     public function isLeftUnpaidOverdue(OrderPaymentTermsInterface $terms, \DateTimeInterface $today): bool
@@ -143,21 +141,30 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
      * order not cancelled and unpaid, due date passed: switching methods never clears an overdue
      * item.
      */
-    private function createLeftUnpaidQueryBuilder(\DateTimeInterface $today): QueryBuilder
+    /**
+     * Aliases and parameter names are prefixed, so that the query can be a subquery of another
+     * one (`$parametersTo`: the outer query, which holds the parameters).
+     */
+    private function createLeftUnpaidQueryBuilder(\DateTimeInterface $today, string $prefix = '', ?QueryBuilder $queryBuilder = null, ?QueryBuilder $parametersTo = null): QueryBuilder
     {
-        return $this->createQueryBuilder('t')
-            ->innerJoin('t.order', 'o')
-            ->andWhere('t.state = :released')
-            ->andWhere('t.closingReason IN (:lostReasons)')
-            ->andWhere('t.dueDate < :today')
-            ->andWhere('o.state = :orderNew')
-            ->andWhere('o.paymentState NOT IN (:paidStates)')
-            ->andWhere(sprintf('NOT EXISTS (SELECT later.id FROM %s later WHERE later.order = t.order AND later.id > t.id)', $this->getEntityName()))
-            ->setParameter('released', OrderPaymentTermsInterface::STATE_RELEASED)
-            ->setParameter('lostReasons', TradeCreditReserver::LOST_RESERVATION_REASONS)
-            ->setParameter('orderNew', OrderInterface::STATE_NEW)
-            ->setParameter('paidStates', [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED])
-            ->setParameter('today', self::day($today), 'date_immutable')
+        [$t, $o, $later] = [$prefix . 't', $prefix . 'o', $prefix . 'later'];
+        $queryBuilder = null === $queryBuilder ? $this->createQueryBuilder($t) : $queryBuilder->from($this->getEntityName(), $t);
+        ($parametersTo ?? $queryBuilder)
+            ->setParameter($prefix . 'released', OrderPaymentTermsInterface::STATE_RELEASED)
+            ->setParameter($prefix . 'lostReasons', TradeCreditReserver::LOST_RESERVATION_REASONS)
+            ->setParameter($prefix . 'orderNew', OrderInterface::STATE_NEW)
+            ->setParameter($prefix . 'paidStates', [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED])
+            ->setParameter($prefix . 'today', self::day($today), 'date_immutable')
+        ;
+
+        return $queryBuilder
+            ->innerJoin(sprintf('%s.order', $t), $o)
+            ->andWhere(sprintf('%s.state = :%sreleased', $t, $prefix))
+            ->andWhere(sprintf('%s.closingReason IN (:%slostReasons)', $t, $prefix))
+            ->andWhere(sprintf('%s.dueDate < :%stoday', $t, $prefix))
+            ->andWhere(sprintf('%s.state = :%sorderNew', $o, $prefix))
+            ->andWhere(sprintf('%s.paymentState NOT IN (:%spaidStates)', $o, $prefix))
+            ->andWhere(sprintf('NOT EXISTS (SELECT %3$s.id FROM %4$s %3$s WHERE %3$s.order = %1$s.order AND %3$s.id > %1$s.id)', $t, $o, $later, $this->getEntityName()))
         ;
     }
 

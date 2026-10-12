@@ -35,8 +35,11 @@ interface OrderPaymentTermsRepositoryInterface extends RepositoryInterface
      */
     public function findLeftUnpaidOverdueByAccount(TradeCreditAccountInterface $account, \DateTimeInterface $today): array;
 
-    /** @return list<string> ids of the terms of `findLeftUnpaidOverdueByAccount()`, all accounts */
-    public function findLeftUnpaidOverdueIds(\DateTimeInterface $today): array;
+    /**
+     * DQL condition "`$termsAlias` is a left unpaid overdue item" (an `IN` subquery, parameters
+     * added to `$queryBuilder`), for the admin open items grid filters.
+     */
+    public function leftUnpaidOverdueCondition(QueryBuilder $queryBuilder, string $termsAlias, \DateTimeInterface $today): string;
 
     public function isLeftUnpaidOverdue(OrderPaymentTermsInterface $terms, \DateTimeInterface $today): bool;
 

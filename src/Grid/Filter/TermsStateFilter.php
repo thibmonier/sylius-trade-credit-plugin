@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Grid\Filter;
 
 use Psr\Clock\ClockInterface;
+use Sylius\Bundle\GridBundle\Doctrine\ORM\DataSource;
 use Sylius\Component\Grid\Data\DataSourceInterface;
 use Sylius\Component\Grid\Filtering\FilterInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
@@ -24,21 +25,23 @@ final class TermsStateFilter implements FilterInterface
 
     public function apply(DataSourceInterface $dataSource, string $name, $data, array $options): void
     {
-        if (!is_string($data) || '' === $data) {
+        // Doctrine ORM grid driver: the left unpaid items are a subquery.
+        if (!$dataSource instanceof DataSource || !is_string($data) || '' === $data) {
             return;
         }
 
         $expressionBuilder = $dataSource->getExpressionBuilder();
-        $leftUnpaid = $this->termsRepository->findLeftUnpaidOverdueIds($this->clock->now());
         $state = $expressionBuilder->equals('state', $data);
-        if ([] === $leftUnpaid || OrderPaymentTermsInterface::STATE_SETTLED === $data) {
+        if (OrderPaymentTermsInterface::STATE_SETTLED === $data) {
             $dataSource->restrict($state);
 
             return;
         }
 
+        $queryBuilder = $dataSource->getQueryBuilder();
+        $leftUnpaid = $this->termsRepository->leftUnpaidOverdueCondition($queryBuilder, $queryBuilder->getRootAliases()[0], $this->clock->now());
         $dataSource->restrict(OrderPaymentTermsInterface::STATE_RESERVED === $data
-            ? $expressionBuilder->orX($state, $expressionBuilder->in('id', $leftUnpaid))
-            : $expressionBuilder->andX($state, $expressionBuilder->notIn('id', $leftUnpaid)));
+            ? $expressionBuilder->orX($state, $leftUnpaid)
+            : $expressionBuilder->andX($state, sprintf('NOT (%s)', $leftUnpaid)));
     }
 }

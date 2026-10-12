@@ -201,13 +201,16 @@ final class AdminTradeCreditTest extends WebTestCase
         $this->entityManager()->flush();
         $markAsPaid = sprintf('[data-test-tmonier-mark-as-paid="%s"]', (string) $left->getNumber());
 
-        foreach (['/admin/trade-credit/open-items', '/admin/trade-credit/open-items?criteria[overdue]=true'] as $uri) {
+        foreach (['/admin/trade-credit/open-items', '/admin/trade-credit/open-items?criteria[overdue]=true', '/admin/trade-credit/open-items?criteria[state]=reserved&criteria[overdue]=true'] as $uri) {
             $crawler = $this->client->request('GET', $uri);
             self::assertResponseIsSuccessful();
             self::assertCount(1, $crawler->filter($markAsPaid), $uri);
         }
-        $crawler = $this->client->request('GET', '/admin/trade-credit/open-items?criteria[overdue]=false');
-        self::assertCount(0, $crawler->filter($markAsPaid));
+        foreach (['/admin/trade-credit/open-items?criteria[overdue]=false', '/admin/trade-credit/open-items?criteria[state]=released'] as $uri) {
+            $crawler = $this->client->request('GET', $uri);
+            self::assertResponseIsSuccessful();
+            self::assertCount(0, $crawler->filter($markAsPaid), $uri);
+        }
 
         $crawler = $this->client->request('GET', '/admin/trade-credit/open-items?criteria[overdue]=true');
         $this->client->submit($crawler->filter($markAsPaid)->form());

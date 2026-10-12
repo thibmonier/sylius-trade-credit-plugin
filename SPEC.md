@@ -84,7 +84,9 @@ cannot be deleted.
   `payment_method.unavailable`.
 - **Left unpaid items** are shown as overdue on the statement (and `overdueAmount`), the admin
   customer card and the open items grid (state "Open" and the "Overdue" filter include them;
-  Mark as paid completes the order's payment).
+  Mark as paid completes the order's payment). The grid filters add them as an `IN` subquery
+  (no id list); the overdue badge checks the loaded order first, then runs one query per account
+  and request.
 - **Exception mapping**: `TradeCreditReservationException` (also when wrapped by Messenger) →
   422 JSON for `/api/*`, redirect + flash for shop (checkout complete or order page) and admin.
 - **Terms**: account terms override the policy; `PaymentTerms::dueDate()` from the completion

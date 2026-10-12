@@ -6,7 +6,10 @@ namespace Tmonier\SyliusTradeCreditPlugin\Twig;
 
 use Psr\Clock\ClockInterface;
 use Sylius\Component\Core\Model\CustomerInterface;
+use Sylius\Component\Core\Model\OrderInterface;
+use Sylius\Component\Core\OrderPaymentStates;
 use Sylius\Resource\Doctrine\Persistence\RepositoryInterface;
+use Symfony\Contracts\Service\ResetInterface;
 use Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner;
 use Tmonier\SyliusTradeCreditPlugin\Account\TradeCreditAccountProvider;
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
@@ -14,13 +17,17 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Repository\PaymentTermsPolicyRepositoryInterface;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 use Tmonier\SyliusTradeCreditPlugin\Terms\LegalTermsChecker;
 use Tmonier\SyliusTradeCreditPlugin\Terms\PaymentTerms;
 use Twig\Extension\AbstractExtension;
 use Twig\TwigFunction;
 
-final class TradeCreditExtension extends AbstractExtension
+final class TradeCreditExtension extends AbstractExtension implements ResetInterface
 {
+    /** @var array<int, list<string|null>> ids of the left unpaid overdue items, per account object */
+    private array $leftUnpaidIds = [];
+
     /** @param RepositoryInterface<CustomerInterface> $customerRepository */
     public function __construct(
         private readonly TradeCreditAccountProvider $accountProvider,
@@ -59,6 +66,11 @@ final class TradeCreditExtension extends AbstractExtension
         return $this->accountProvider->forCustomer($customer);
     }
 
+    public function reset(): void
+    {
+        $this->leftUnpaidIds = [];
+    }
+
     /** @return list<OrderPaymentTermsInterface> */
     public function openItems(TradeCreditAccountInterface $account): array
     {
@@ -68,8 +80,34 @@ final class TradeCreditExtension extends AbstractExtension
     public function isOverdue(OrderPaymentTermsInterface $terms): bool
     {
         $now = $this->clock->now();
+        if ($terms->isOverdue($now)) {
+            return true;
+        }
 
-        return $terms->isOverdue($now) || (OrderPaymentTermsInterface::STATE_RELEASED === $terms->getState() && $this->termsRepository->isLeftUnpaidOverdue($terms, $now));
+        // Left unpaid after leaving payment on account: checked in PHP first (loaded order), then
+        // one query per account and request (not one per grid row).
+        $order = $terms->getOrder();
+        $account = $terms->getAccount();
+        if (
+            OrderPaymentTermsInterface::STATE_RELEASED !== $terms->getState() ||
+            !in_array($terms->getClosingReason(), TradeCreditReserver::LOST_RESERVATION_REASONS, true) ||
+            $terms->getDueDate()->format('Y-m-d') >= $now->format('Y-m-d') ||
+            !$order instanceof OrderInterface || OrderInterface::STATE_NEW !== $order->getState() ||
+            in_array($order->getPaymentState(), [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED], true) ||
+            null === $account
+        ) {
+            return false;
+        }
+
+        $key = spl_object_id($account);
+        if (!isset($this->leftUnpaidIds[$key])) {
+            $this->leftUnpaidIds[$key] = array_map(
+                static fn (OrderPaymentTermsInterface $leftUnpaid): ?string => $leftUnpaid->getId(),
+                $this->termsRepository->findLeftUnpaidOverdueByAccount($account, $now),
+            );
+        }
+
+        return in_array($terms->getId(), $this->leftUnpaidIds[$key], true);
     }
 
     /**

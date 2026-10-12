@@ -294,6 +294,7 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.repository.payment_terms_policy'),
         ])
         ->tag('twig.extension')
+        ->tag('kernel.reset', ['method' => 'reset'])
     ;
 
     $services
