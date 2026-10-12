@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        accounts: 'Konta kredytu kupieckiego'
+        order_payment_terms: 'Otwarte pozycje'
         placed_by: 'Złożone przez %name%'
         account_days_policy_mode: '%days% dni (koniec miesiąca wg metody płatności)'
         trade_credit: 'Kredyt kupiecki'

@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        accounts: 'Trade credit accounts'
+        order_payment_terms: 'Open items'
         placed_by: 'Placed by %name%'
         account_days_policy_mode: '%days% days (end of month as the payment method)'
         trade_credit: 'Trade credit'

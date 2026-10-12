@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        accounts: 'Comptes de paiement à terme'
+        order_payment_terms: 'Pièces ouvertes'
         placed_by: 'Passée par %name%'
         account_days_policy_mode: '%days% jours (fin de mois selon le moyen de paiement)'
         trade_credit: 'Paiement à terme'

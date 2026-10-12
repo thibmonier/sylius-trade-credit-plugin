@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        accounts: 'Rechnungskauf-Konten'
+        order_payment_terms: 'Offene Posten'
         placed_by: 'Bestellt von %name%'
         account_days_policy_mode: '%days% Tage (Monatsende wie die Zahlungsart)'
         trade_credit: 'Kauf auf Rechnung'

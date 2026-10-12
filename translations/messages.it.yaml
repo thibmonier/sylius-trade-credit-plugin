@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        accounts: 'Conti di credito commerciale'
+        order_payment_terms: 'Partite aperte'
         placed_by: 'Effettuato da %name%'
         account_days_policy_mode: '%days% giorni (fine mese secondo il metodo di pagamento)'
         trade_credit: 'Credito commerciale'

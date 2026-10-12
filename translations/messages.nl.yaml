@@ -1,5 +1,7 @@
 tmonier_trade_credit:
     ui:
+        accounts: 'Handelskredietrekeningen'
+        order_payment_terms: 'Openstaande posten'
         placed_by: 'Geplaatst door %name%'
         account_days_policy_mode: '%days% dagen (einde maand volgens de betaalmethode)'
         trade_credit: 'Handelskrediet'
