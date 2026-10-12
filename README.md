@@ -101,19 +101,33 @@ tmonier_sylius_trade_credit:
             WHOLESALE: { net_days: 30, end_of_month_days: 30 }
 ```
 
+A payment terms policy is checked against the caps of the channels of its payment method; an
+account with its own terms against the strictest configured cap.
+
 Resources (`account`, `payment_terms_policy`, `order_payment_terms`, `ledger_entry`) can be
 overridden like any Sylius resource (`tmonier_sylius_trade_credit.resources.account.classes.model`, ...).
 
 ## How it works
 
 - **Who may pay on account**: the payment method has an enabled payment terms policy, the
+  order is placed by its **signed-in customer** (never a guest checkout, even with the e-mail of
+  a customer with an account: such orders get a generic refusal that reveals nothing), the
   order owner (order-hold `AccountOwnerResolverInterface`: the customer, a company once a
   company plugin decorates it) has an enabled account in the order currency, the **billing
   address has a company name** (B2B check), the account is not on hold, has no overdue open
   item when it blocks them, and the available credit covers the order total (unless exceeding
-  is allowed). Accounts are opened by staff, who verify the customer.
-- **Terms**: the account's net days and end-of-month mode when set, else the policy's. The due
-  date is computed from the checkout completion date and frozen with the reserved amount.
+  is allowed). Accounts are opened by staff, who verify the customer. An order that left
+  payment on account (switched method, failed payment) and is still unpaid after its due date
+  still counts as overdue.
+- **Disabling or deleting payment terms**: a disabled policy refuses its method (it never
+  becomes a plain Offline method for everyone); open items stay settleable, because closing is
+  driven by the reservation, not by the current policy. A policy with open items cannot be
+  deleted nor moved to another method.
+- **Terms**: the account's net days when set (with its own end-of-month mode, else the
+  policy's), else the policy's. The due date is computed from the checkout completion date and
+  frozen with the reserved amount. A new reservation of the same order (after a failed payment
+  or a method switch) never restarts the terms: same due date with the same method, same start
+  date with another method on account.
 - **States of an open item**: *open* (reserved) → *paid* (settled) or *released*. The committed
   amount only changes in SQL by these transitions; every change is a ledger entry.
 - **Refunds**: a refund only happens after a payment was completed, so the credit was already
@@ -145,12 +159,18 @@ shop users of the fixtures (the demo channel requires a verified account to sign
 - No reminders, ageing buckets, payment CSV import, ERP connector, interest computation or
   accounting export in v1. No fees or surcharges.
 - In the shop, the reservation (its own SQL transaction) and the save of the completed order are
-  two steps: if saving the order fails afterwards, the credit stays committed until
-  `tmonier:trade-credit:recalculate --apply` (run it from a daily cron). In the API, the command
-  bus transaction covers both.
+  two steps: if saving the order fails afterwards, the reservation left on the cart is replaced
+  when the checkout is completed again, and released after an hour by
+  `tmonier:trade-credit:recalculate --apply` (run it from a daily cron; it locks each account,
+  so it is safe while customers order). In the API, the command bus transaction covers both.
 - A new payment created after a failed one keeps the method on account and reserves again; if
-  the credit is no longer available, it stays without reservation and the customer is asked to
-  choose another method on the pay page.
+  the credit is no longer available, order-hold replaces the method by an eligible one, or the
+  payment stays without reservation and the customer is asked to choose another method.
+- An order that loses its reservation (payment failed or cancelled, switched to another method)
+  becomes a regular unpaid order: `sylius:cancel-unpaid-orders` counts its expiration period
+  from that release.
+- With a shared (company) account, the statement lists the orders of the other buyers without
+  link nor invoice (`placedByYou` false in the API).
 - The legal warnings are not legal advice and do not block anything.
 - Administrators can still change payment methods and complete payments: the reservations follow.
 
@@ -159,7 +179,7 @@ shop users of the fixtures (the demo channel requires a verified account to sign
 ```bash
 docker compose up -d mysql mailhog   # host ports in compose.override.yml (gitignored)
 composer database-reset              # dev database with fixtures (APP_ENV=test for the test one)
-vendor/bin/phpunit
+vendor/bin/phpunit                   # every suite once (unit, integration, functional)
 vendor/bin/phpstan analyse
 vendor/bin/ecs check
 ```

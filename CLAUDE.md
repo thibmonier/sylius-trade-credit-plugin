@@ -8,6 +8,9 @@ consumer of tmonier/sylius-order-hold-plugin. Design: `SPEC.md`. Public docs: `R
 
 - **Remove the composer path repository** (`repositories` in `composer.json`, pointing to
   `../sylius-order-hold-plugin`) once tmonier/sylius-order-hold-plugin 1.0 is on Packagist.
+  CI already ignores it (`composer config --unset repositories.order-hold` in
+  `.github/workflows/build.yaml`): the build needs order-hold 1.0 on Packagist; drop that step
+  together with the repository.
 - After `composer update tmonier/sylius-order-hold-plugin` (path repository, mirrored copy),
   delete `vendor/tmonier/sylius-order-hold-plugin/vendor` and `.../var` (copied from the
   order-hold working copy, disk space).
