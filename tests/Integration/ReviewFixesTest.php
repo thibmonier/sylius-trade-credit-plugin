@@ -43,7 +43,7 @@ final class ReviewFixesTest extends KernelTestCase
     protected function tearDown(): void
     {
         $this->rollBack();
-        if (null !== $this->otherConnection) {
+        if ($this->otherConnection instanceof \Doctrine\DBAL\Connection) {
             foreach ($this->otherTermsIds as $id) {
                 $this->otherConnection->executeStatement('DELETE FROM tmonier_trade_credit_order_terms WHERE id = ?', [$id]);
             }

@@ -185,7 +185,7 @@ final class ApiTradeCreditTest extends WebTestCase
             'CONTENT_TYPE' => 'PATCH' === $method ? 'application/merge-patch+json' : 'application/ld+json',
             'HTTP_ACCEPT' => 'application/ld+json',
         ];
-        if (null !== $customer) {
+        if ($customer instanceof \Sylius\Component\Core\Model\CustomerInterface) {
             $user = $customer->getUser();
             self::assertInstanceOf(ShopUserInterface::class, $user);
             $this->entityManager()->flush();

@@ -24,12 +24,12 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
  * by the current state of the payment terms policy.
  * Settling and releasing are idempotent (see `TradeCreditReserver`).
  */
-final class TradeCreditWorkflowListener
+final readonly class TradeCreditWorkflowListener
 {
     public function __construct(
-        private readonly TradeCreditReserver $reserver,
-        private readonly PaymentTermsPolicyProvider $policyProvider,
-        private readonly EntityManagerInterface $entityManager,
+        private TradeCreditReserver $reserver,
+        private PaymentTermsPolicyProvider $policyProvider,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -42,7 +42,7 @@ final class TradeCreditWorkflowListener
 
         $payment = $order->getLastPayment(PaymentInterface::STATE_CART) ?? $order->getLastPayment(PaymentInterface::STATE_NEW);
         $paymentMethod = $payment?->getMethod();
-        if (null !== $paymentMethod && $this->policyProvider->isOnAccount($paymentMethod)) {
+        if ($paymentMethod instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface && $this->policyProvider->isOnAccount($paymentMethod)) {
             // The reservation references the order: an order completed before it was ever saved
             // (built in code) is saved first. Its id alone does not tell: with sequences
             // (PostgreSQL) a persisted order has an id before its row is inserted.
@@ -81,7 +81,7 @@ final class TradeCreditWorkflowListener
     {
         $payment = $event->getSubject();
         $paymentMethod = $payment instanceof PaymentInterface ? $payment->getMethod() : null;
-        if (!$payment instanceof PaymentInterface || null === $paymentMethod) {
+        if (!$payment instanceof PaymentInterface || !$paymentMethod instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface) {
             return;
         }
 

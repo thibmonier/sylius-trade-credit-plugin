@@ -31,24 +31,24 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * owed outside the shop count). Registered through order-hold, so it applies to the
  * shop and API method lists, the default method, method changes and checkout completion.
  */
-final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityCheckerInterface
+final readonly class TradeCreditEligibilityChecker implements PaymentMethodEligibilityCheckerInterface
 {
     public function __construct(
-        private readonly PaymentTermsPolicyProvider $policyProvider,
-        private readonly TradeCreditAccountProvider $accountProvider,
-        private readonly BusinessCustomerChecker $businessCustomerChecker,
-        private readonly OrderOwnerChecker $orderOwnerChecker,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly MoneyFormatterInterface $moneyFormatter,
-        private readonly ClockInterface $clock,
-        private readonly CreditPositionResolver $positionResolver,
+        private PaymentTermsPolicyProvider $policyProvider,
+        private TradeCreditAccountProvider $accountProvider,
+        private BusinessCustomerChecker $businessCustomerChecker,
+        private OrderOwnerChecker $orderOwnerChecker,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private MoneyFormatterInterface $moneyFormatter,
+        private ClockInterface $clock,
+        private CreditPositionResolver $positionResolver,
     ) {
     }
 
     public function getIneligibility(PaymentMethodInterface $paymentMethod, PaymentInterface $payment): ?PaymentMethodIneligibility
     {
         $policy = $this->policyProvider->findPolicy($paymentMethod);
-        if (null === $policy) {
+        if (!$policy instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface) {
             return null;
         }
 
@@ -65,7 +65,7 @@ final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityChe
         $reserved = null === $order->getId() ? null : $this->termsRepository->findReservedForOrder($order);
         // Placed order already reserved with this method: keep it valid.
         if (
-            null !== $reserved &&
+            $reserved instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface &&
             OrderCheckoutStates::STATE_COMPLETED === $order->getCheckoutState() &&
             $reserved->getPaymentMethod()?->getId() === $paymentMethod->getId()
         ) {
@@ -73,7 +73,7 @@ final class TradeCreditEligibilityChecker implements PaymentMethodEligibilityChe
         }
 
         $account = $this->accountProvider->forOrder($order);
-        if (null === $account || !$account->isEnabled() || $account->getCurrencyCode() !== $order->getCurrencyCode()) {
+        if (!$account instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface || !$account->isEnabled() || $account->getCurrencyCode() !== $order->getCurrencyCode()) {
             return new PaymentMethodIneligibility(IneligibilityReason::Restricted, 'tmonier_trade_credit.payment_method.no_account');
         }
         if (!$this->businessCustomerChecker->isBusinessOrder($order)) {

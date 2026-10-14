@@ -9,15 +9,15 @@ namespace Tmonier\SyliusTradeCreditPlugin\Terms;
  * 60 days from the invoice date, or 45 days end of month), or the lower limits configured per
  * channel (sector caps of L441-11). A warning, not legal advice: nothing is blocked.
  */
-final class LegalTermsChecker
+final readonly class LegalTermsChecker
 {
     /**
      * @param array<string, array{net_days: int, end_of_month_days: int}> $channelLimits
      */
     public function __construct(
-        private readonly int $maxNetDays = 60,
-        private readonly int $maxEndOfMonthDays = 45,
-        private readonly array $channelLimits = [],
+        private int $maxNetDays = 60,
+        private int $maxEndOfMonthDays = 45,
+        private array $channelLimits = [],
     ) {
     }
 
@@ -32,7 +32,7 @@ final class LegalTermsChecker
     public function warning(PaymentTerms $terms, ?array $channelCodes = null): ?array
     {
         $candidates = ['' => ['net_days' => $this->maxNetDays, 'end_of_month_days' => $this->maxEndOfMonthDays]];
-        foreach (null === $channelCodes ? array_keys($this->channelLimits) : $channelCodes as $code) {
+        foreach ($channelCodes ?? array_keys($this->channelLimits) as $code) {
             if (isset($this->channelLimits[$code])) {
                 $candidates[$code] = $this->channelLimits[$code];
             }

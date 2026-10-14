@@ -8,16 +8,16 @@ namespace Tmonier\SyliusTradeCreditPlugin\Ageing;
  * Ageing of the open items (amounts in minor units) by days past their due date: not due yet
  * (`current`), 1-30, 31-60, 61-90 and over 90 days.
  */
-final class AgeingBuckets
+final readonly class AgeingBuckets
 {
     public const BUCKETS = ['current', 'days_1_30', 'days_31_60', 'days_61_90', 'days_over_90'];
 
     public function __construct(
-        public readonly int $current = 0,
-        public readonly int $days1To30 = 0,
-        public readonly int $days31To60 = 0,
-        public readonly int $days61To90 = 0,
-        public readonly int $daysOver90 = 0,
+        public int $current = 0,
+        public int $days1To30 = 0,
+        public int $days31To60 = 0,
+        public int $days61To90 = 0,
+        public int $daysOver90 = 0,
     ) {
     }
 

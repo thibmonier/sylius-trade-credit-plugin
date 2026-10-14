@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Terms;
 
 /** Net days + end-of-month mode, as applied to an order. */
-final class PaymentTerms
+final readonly class PaymentTerms
 {
     public function __construct(
-        public readonly int $netDays,
-        public readonly EndOfMonthMode $endOfMonthMode = EndOfMonthMode::None,
+        public int $netDays,
+        public EndOfMonthMode $endOfMonthMode = EndOfMonthMode::None,
     ) {
         if ($netDays < 0) {
             throw new \InvalidArgumentException('Net days cannot be negative.');

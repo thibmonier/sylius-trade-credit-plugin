@@ -19,18 +19,18 @@ use Tmonier\SyliusTradeCreditPlugin\Exception\TradeCreditReservationException;
  * the shop and the admin, instead of a server error. Messenger wraps handler exceptions: the
  * chain of previous exceptions is searched.
  */
-final class ReservationExceptionListener
+final readonly class ReservationExceptionListener
 {
     public function __construct(
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly TranslatorInterface $translator,
+        private UrlGeneratorInterface $urlGenerator,
+        private TranslatorInterface $translator,
     ) {
     }
 
     public function __invoke(ExceptionEvent $event): void
     {
         $exception = $this->find($event->getThrowable());
-        if (null === $exception) {
+        if (!$exception instanceof \Tmonier\SyliusTradeCreditPlugin\Exception\TradeCreditReservationException) {
             return;
         }
 
@@ -77,7 +77,7 @@ final class ReservationExceptionListener
 
     private function find(\Throwable $throwable): ?TradeCreditReservationException
     {
-        for ($current = $throwable; null !== $current; $current = $current->getPrevious()) {
+        for ($current = $throwable; $current instanceof \Throwable; $current = $current->getPrevious()) {
             if ($current instanceof TradeCreditReservationException) {
                 return $current;
             }

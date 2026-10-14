@@ -15,11 +15,11 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * Open items grid state: "open" also lists the orders that left payment on account and are
  * unpaid after their due date (released terms that still block the account as overdue).
  */
-final class TermsStateFilter implements FilterInterface
+final readonly class TermsStateFilter implements FilterInterface
 {
     public function __construct(
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly ClockInterface $clock,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private ClockInterface $clock,
     ) {
     }
 

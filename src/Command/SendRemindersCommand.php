@@ -37,7 +37,7 @@ final class SendRemindersCommand extends Command
             return Command::SUCCESS;
         }
 
-        $io->table(['Order', 'E-mail', 'Due date', 'Level (days)', 'Status'], array_map(static fn (array $row): array => array_values($row), $report));
+        $io->table(['Order', 'E-mail', 'Due date', 'Level (days)', 'Status'], array_map(array_values(...), $report));
         $failed = count(array_filter($report, static fn (array $row): bool => 'failed' === $row['status']));
         if ($dryRun) {
             $io->note(sprintf('Dry run: %d reminder(s) to send.', count($report)));

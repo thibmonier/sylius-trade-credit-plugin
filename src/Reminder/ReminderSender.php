@@ -27,19 +27,19 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * is never sent after a higher one, so running the command again (or concurrently) never sends
  * a reminder twice. A failed e-mail is forgotten, so that the next run sends it.
  */
-final class ReminderSender
+final readonly class ReminderSender
 {
     public const EMAIL = 'tmonier_trade_credit_payment_reminder';
 
     /** @param list<int> $levels */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly SenderInterface $sender,
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly ClockInterface $clock,
-        private readonly LoggerInterface $logger,
-        private readonly array $levels,
+        private EntityManagerInterface $entityManager,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private SenderInterface $sender,
+        private UrlGeneratorInterface $urlGenerator,
+        private ClockInterface $clock,
+        private LoggerInterface $logger,
+        private array $levels,
     ) {
     }
 

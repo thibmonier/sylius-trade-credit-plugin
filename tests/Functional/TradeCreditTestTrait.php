@@ -134,7 +134,7 @@ trait TradeCreditTestTrait
         $order->setChannel($channel);
         $order->setLocaleCode($this->localeCode());
         $order->setCurrencyCode((string) $channel->getBaseCurrency()?->getCode());
-        if (!$guest && null !== $customer?->getUser()) {
+        if (!$guest && $customer?->getUser() instanceof \Sylius\Component\User\Model\UserInterface) {
             $order->setCustomerWithAuthorization($customer);
         } else {
             $order->setCustomer($customer ?? $this->customer(false));
@@ -164,7 +164,7 @@ trait TradeCreditTestTrait
         if (in_array($checkoutState, ['payment_selected', 'completed'], true)) {
             $payment = $order->getLastPayment(PaymentInterface::STATE_CART);
             self::assertNotNull($payment);
-            if (null !== $paymentMethod) {
+            if ($paymentMethod instanceof \Sylius\Component\Core\Model\PaymentMethodInterface) {
                 $payment->setMethod($paymentMethod);
             }
             $this->apply($order, OrderCheckoutTransitions::TRANSITION_SELECT_PAYMENT);

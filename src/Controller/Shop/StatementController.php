@@ -14,13 +14,13 @@ use Tmonier\SyliusTradeCreditPlugin\Statement\StatementBuilder;
 use Twig\Environment;
 
 /** "Trade credit" page of the customer account. */
-final class StatementController
+final readonly class StatementController
 {
     public function __construct(
-        private readonly StatementBuilder $statementBuilder,
-        private readonly Security $security,
-        private readonly Environment $twig,
-        private readonly UrlGeneratorInterface $urlGenerator,
+        private StatementBuilder $statementBuilder,
+        private Security $security,
+        private Environment $twig,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 

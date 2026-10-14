@@ -18,6 +18,6 @@ final class OrderOwnerChecker
     {
         $customer = $order->getCustomer();
 
-        return $customer instanceof CustomerInterface && null !== $customer->getUser() && !$order->isCreatedByGuest();
+        return $customer instanceof CustomerInterface && $customer->getUser() instanceof \Sylius\Component\User\Model\UserInterface && !$order->isCreatedByGuest();
     }
 }

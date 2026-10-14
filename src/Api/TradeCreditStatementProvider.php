@@ -15,12 +15,12 @@ use Tmonier\SyliusTradeCreditPlugin\Statement\StatementBuilder;
 use Tmonier\SyliusTradeCreditPlugin\Statement\StatementItem;
 
 /** @implements ProviderInterface<TradeCreditStatementView> */
-final class TradeCreditStatementProvider implements ProviderInterface
+final readonly class TradeCreditStatementProvider implements ProviderInterface
 {
     public function __construct(
-        private readonly StatementBuilder $statementBuilder,
-        private readonly Security $security,
-        private readonly ClockInterface $clock,
+        private StatementBuilder $statementBuilder,
+        private Security $security,
+        private ClockInterface $clock,
     ) {
     }
 
@@ -29,7 +29,7 @@ final class TradeCreditStatementProvider implements ProviderInterface
         $user = $this->security->getUser();
         $customer = $user instanceof ShopUserInterface ? $user->getCustomer() : null;
         $statement = $customer instanceof CustomerInterface ? $this->statementBuilder->forCustomer($customer) : null;
-        if (null === $statement) {
+        if (!$statement instanceof \Tmonier\SyliusTradeCreditPlugin\Statement\Statement) {
             return null;
         }
 

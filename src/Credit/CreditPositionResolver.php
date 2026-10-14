@@ -8,11 +8,11 @@ use Psr\Log\LoggerInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 
 /** Position of an account: the external one (ERP) when there is one, else the Sylius figures. */
-final class CreditPositionResolver
+final readonly class CreditPositionResolver
 {
     public function __construct(
-        private readonly ExternalCreditProviderInterface $externalCreditProvider,
-        private readonly LoggerInterface $logger,
+        private ExternalCreditProviderInterface $externalCreditProvider,
+        private LoggerInterface $logger,
     ) {
     }
 
@@ -27,9 +27,9 @@ final class CreditPositionResolver
             throw new ExternalCreditUnavailableException('External credit position unavailable.', 0, $exception);
         }
 
-        return null === $external
-            ? new CreditPosition($account->getCreditLimit(), $account->getCommittedAmount())
-            : new CreditPosition($external->creditLimit ?? $account->getCreditLimit(), $account->getCommittedAmount(), $external->externalCommittedAmount, true, null !== $external->creditLimit);
+        return $external instanceof \Tmonier\SyliusTradeCreditPlugin\Credit\ExternalCreditPosition
+            ? new CreditPosition($external->creditLimit ?? $account->getCreditLimit(), $account->getCommittedAmount(), $external->externalCommittedAmount, true, null !== $external->creditLimit)
+            : new CreditPosition($account->getCreditLimit(), $account->getCommittedAmount());
     }
 
     /** The Sylius figures when the external position is unavailable (display only, never to decide). */

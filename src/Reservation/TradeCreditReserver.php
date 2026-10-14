@@ -46,7 +46,7 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  *
  * Ids of terms and ledger entries are UUIDs generated here (no sequence needed).
  */
-final class TradeCreditReserver
+final readonly class TradeCreditReserver
 {
     public const REASON_PAID = 'paid';
 
@@ -73,17 +73,17 @@ final class TradeCreditReserver
      * @param class-string<TradeCreditLedgerEntryInterface> $ledgerClass
      */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly TradeCreditAccountProvider $accountProvider,
-        private readonly PaymentTermsPolicyProvider $policyProvider,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly OrderOwnerChecker $orderOwnerChecker,
-        private readonly CreditPositionResolver $positionResolver,
-        private readonly ClockInterface $clock,
-        private readonly LoggerInterface $logger,
-        private readonly string $accountClass,
-        private readonly string $termsClass,
-        private readonly string $ledgerClass,
+        private EntityManagerInterface $entityManager,
+        private TradeCreditAccountProvider $accountProvider,
+        private PaymentTermsPolicyProvider $policyProvider,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private OrderOwnerChecker $orderOwnerChecker,
+        private CreditPositionResolver $positionResolver,
+        private ClockInterface $clock,
+        private LoggerInterface $logger,
+        private string $accountClass,
+        private string $termsClass,
+        private string $ledgerClass,
     ) {
     }
 
@@ -99,7 +99,7 @@ final class TradeCreditReserver
     public function reserve(OrderInterface $order, PaymentMethodInterface $paymentMethod, bool $refreshEntities = true): void
     {
         $policy = $this->policyProvider->forPaymentMethod($paymentMethod);
-        if (null === $policy) {
+        if (!$policy instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface) {
             return;
         }
         if (null === $order->getId() || $this->entityManager->getUnitOfWork()->isScheduledForInsert($order)) {
@@ -111,7 +111,7 @@ final class TradeCreditReserver
         }
 
         $account = $this->accountProvider->forOrder($order);
-        if (null === $account || null === $account->getId() || !$account->isEnabled()) {
+        if (!$account instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface || null === $account->getId() || !$account->isEnabled()) {
             throw new TradeCreditReservationException('tmonier_trade_credit.reservation.no_account', $order->getTokenValue());
         }
         if ($account->getCurrencyCode() !== $order->getCurrencyCode()) {
@@ -215,7 +215,7 @@ final class TradeCreditReserver
         }
 
         $preview = $this->reservedRow($this->connection(), $orderId);
-        if (null === $preview || (null !== $paymentMethod && null !== $preview['payment_method_id'] && $preview['payment_method_id'] !== $paymentMethod->getId())) {
+        if (null === $preview || ($paymentMethod instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface && null !== $preview['payment_method_id'] && $preview['payment_method_id'] !== $paymentMethod->getId())) {
             return false;
         }
 
@@ -355,7 +355,7 @@ final class TradeCreditReserver
                 continue;
             }
             $method = $order->getLastPayment()?->getMethod();
-            if (null !== $method && $this->policyProvider->isOnAccount($method)) {
+            if ($method instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface && $this->policyProvider->isOnAccount($method)) {
                 try {
                     $this->reserve($order, $method);
 
@@ -394,7 +394,7 @@ final class TradeCreditReserver
         );
         $previous = array_values(array_filter($previous, static fn (array $row): bool => self::REASON_STALE !== $row['closing_reason']));
         if ([] === $previous) {
-            $start = null === $order->getCheckoutCompletedAt() ? $now : \DateTimeImmutable::createFromInterface($order->getCheckoutCompletedAt());
+            $start = $order->getCheckoutCompletedAt() instanceof \DateTimeInterface ? \DateTimeImmutable::createFromInterface($order->getCheckoutCompletedAt()) : $now;
 
             return [$accountTerms->netDays, $accountTerms->endOfMonthMode->value, $accountTerms->dueDate($start)];
         }

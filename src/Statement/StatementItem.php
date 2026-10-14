@@ -10,19 +10,19 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
  * An open item of a statement: an order paid on account, not paid yet. With a shared (company)
  * account, orders of other buyers are listed without link: only their own customer can open them.
  */
-final class StatementItem
+final readonly class StatementItem
 {
     public function __construct(
-        public readonly OrderPaymentTermsInterface $terms,
-        public readonly string $orderNumber,
-        public readonly ?string $orderTokenValue,
-        public readonly int $amount,
-        public readonly \DateTimeImmutable $orderDate,
-        public readonly \DateTimeImmutable $dueDate,
-        public readonly bool $overdue,
-        public readonly ?string $invoiceUrl = null,
-        public readonly bool $placedByViewer = true,
-        public readonly ?string $buyerName = null,
+        public OrderPaymentTermsInterface $terms,
+        public string $orderNumber,
+        public ?string $orderTokenValue,
+        public int $amount,
+        public \DateTimeImmutable $orderDate,
+        public \DateTimeImmutable $dueDate,
+        public bool $overdue,
+        public ?string $invoiceUrl = null,
+        public bool $placedByViewer = true,
+        public ?string $buyerName = null,
     ) {
     }
 }

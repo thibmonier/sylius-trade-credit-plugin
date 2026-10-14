@@ -14,11 +14,11 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * Admin: payment terms with open items can be disabled (no new order) but neither deleted nor
  * moved to another payment method, which would turn their method into a plain Offline method.
  */
-final class PaymentTermsPolicyGuardListener
+final readonly class PaymentTermsPolicyGuardListener
 {
     public function __construct(
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly EntityManagerInterface $entityManager,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 

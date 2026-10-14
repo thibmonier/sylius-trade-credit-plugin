@@ -18,11 +18,11 @@ use Tmonier\SyliusTradeCreditPlugin\Terms\EndOfMonthMode;
  * indemnity mentions required between professionals in France (L441-10). Other invoices are
  * left to the next provider (channel settings).
  */
-final class TradeCreditInvoicePaymentTermsProvider implements InvoicePaymentTermsProviderInterface
+final readonly class TradeCreditInvoicePaymentTermsProvider implements InvoicePaymentTermsProviderInterface
 {
     public function __construct(
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly TranslatorInterface $translator,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private TranslatorInterface $translator,
     ) {
     }
 
@@ -34,7 +34,7 @@ final class TradeCreditInvoicePaymentTermsProvider implements InvoicePaymentTerm
         }
 
         $terms = $this->termsRepository->findLatestForOrder($order);
-        if (null === $terms) {
+        if (!$terms instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface) {
             return null;
         }
 

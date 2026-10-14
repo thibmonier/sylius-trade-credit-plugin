@@ -20,23 +20,23 @@ final class PaymentTermsPolicyProvider
 
     public function forPaymentMethod(?PaymentMethodInterface $paymentMethod): ?PaymentTermsPolicyInterface
     {
-        if (null === $paymentMethod || null === $paymentMethod->getId()) {
+        if (!$paymentMethod instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface || null === $paymentMethod->getId()) {
             return null;
         }
 
         $policy = $this->findPolicy($paymentMethod);
 
-        return null !== $policy && $policy->isEnabled() ? $policy : null;
+        return $policy instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface && $policy->isEnabled() ? $policy : null;
     }
 
     /** The policy of the method, enabled or not: a method with a disabled policy is payment on account, unavailable. */
     public function findPolicy(?PaymentMethodInterface $paymentMethod): ?PaymentTermsPolicyInterface
     {
-        if (null === $paymentMethod || null === $paymentMethod->getId()) {
+        if (!$paymentMethod instanceof \Sylius\Component\Payment\Model\PaymentMethodInterface || null === $paymentMethod->getId()) {
             return null;
         }
 
-        $key = (string) $paymentMethod->getCode() . '#' . (is_scalar($paymentMethod->getId()) ? (string) $paymentMethod->getId() : '');
+        $key = $paymentMethod->getCode() . '#' . (is_scalar($paymentMethod->getId()) ? (string) $paymentMethod->getId() : '');
         if (!array_key_exists($key, $this->anyPolicies)) {
             $this->anyPolicies[$key] = $this->policyRepository->findOneByPaymentMethod($paymentMethod);
         }
@@ -46,7 +46,7 @@ final class PaymentTermsPolicyProvider
 
     public function isOnAccount(?PaymentMethodInterface $paymentMethod): bool
     {
-        return null !== $this->forPaymentMethod($paymentMethod);
+        return $this->forPaymentMethod($paymentMethod) instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
     }
 
     public function reset(): void

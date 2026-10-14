@@ -12,10 +12,10 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
  * Keeps orders with a trade credit reservation out of `sylius:cancel-unpaid-orders` (otherwise
  * an order on 30-day terms would be cancelled after the default 5 days), in SQL.
  */
-final class ReservedOrdersQueryExtension implements UnpaidOrderCandidateQueryExtensionInterface
+final readonly class ReservedOrdersQueryExtension implements UnpaidOrderCandidateQueryExtensionInterface
 {
     /** @param class-string<OrderPaymentTermsInterface> $termsClass */
-    public function __construct(private readonly string $termsClass)
+    public function __construct(private string $termsClass)
     {
     }
 

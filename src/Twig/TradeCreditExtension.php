@@ -115,18 +115,16 @@ final class TradeCreditExtension extends AbstractExtension implements ResetInter
             $terms->getDueDate()->format('Y-m-d') >= $now->format('Y-m-d') ||
             !$order instanceof OrderInterface || OrderInterface::STATE_NEW !== $order->getState() ||
             in_array($order->getPaymentState(), [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED], true) ||
-            null === $account
+            !$account instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface
         ) {
             return false;
         }
 
         $key = spl_object_id($account);
-        if (!isset($this->leftUnpaidIds[$key])) {
-            $this->leftUnpaidIds[$key] = array_map(
-                static fn (OrderPaymentTermsInterface $leftUnpaid): ?string => $leftUnpaid->getId(),
-                $this->termsRepository->findLeftUnpaidOverdueByAccount($account, $now),
-            );
-        }
+        $this->leftUnpaidIds[$key] ??= array_map(
+            static fn (OrderPaymentTermsInterface $leftUnpaid): ?string => $leftUnpaid->getId(),
+            $this->termsRepository->findLeftUnpaidOverdueByAccount($account, $now),
+        );
 
         return in_array($terms->getId(), $this->leftUnpaidIds[$key], true);
     }
@@ -147,7 +145,7 @@ final class TradeCreditExtension extends AbstractExtension implements ResetInter
         if (null === $netDays) {
             return null;
         }
-        if (null !== $subject->getEndOfMonthMode()) {
+        if ($subject->getEndOfMonthMode() instanceof \Tmonier\SyliusTradeCreditPlugin\Terms\EndOfMonthMode) {
             return $this->legalTermsChecker->warning($subject->getTerms(new PaymentTerms($netDays)));
         }
 
