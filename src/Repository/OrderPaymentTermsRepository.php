@@ -71,7 +71,7 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
             ->andWhere('t.state = :state')
             ->andWhere('t.dueDate <= :until')
             ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
-            ->setParameter('until', self::day($today)->modify(sprintf('+%d days', max(0, $daysBeforeDue))), 'date_immutable')
+            ->setParameter('until', $this->day($today)->modify(sprintf('+%d days', max(0, $daysBeforeDue))), 'date_immutable')
             ->addOrderBy('t.dueDate', 'ASC')
             ->getQuery()
             ->getResult()
@@ -123,7 +123,7 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
             ->andWhere('t.dueDate < :today')
             ->setParameter('account', $account)
             ->setParameter('state', OrderPaymentTermsInterface::STATE_RESERVED)
-            ->setParameter('today', self::day($today), 'date_immutable')
+            ->setParameter('today', $this->day($today), 'date_immutable')
             ->setMaxResults(1)
             ->getQuery()
             ->getOneOrNullResult()
@@ -184,13 +184,13 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
     private function createLeftUnpaidQueryBuilder(\DateTimeInterface $today, string $prefix = '', ?QueryBuilder $queryBuilder = null, ?QueryBuilder $parametersTo = null): QueryBuilder
     {
         [$t, $o, $later] = [$prefix . 't', $prefix . 'o', $prefix . 'later'];
-        $queryBuilder = null === $queryBuilder ? $this->createQueryBuilder($t) : $queryBuilder->from($this->getEntityName(), $t);
+        $queryBuilder = $queryBuilder?->from($this->getEntityName(), $t) ?? $this->createQueryBuilder($t);
         ($parametersTo ?? $queryBuilder)
             ->setParameter($prefix . 'released', OrderPaymentTermsInterface::STATE_RELEASED)
             ->setParameter($prefix . 'lostReasons', TradeCreditReserver::LOST_RESERVATION_REASONS)
             ->setParameter($prefix . 'orderNew', OrderInterface::STATE_NEW)
             ->setParameter($prefix . 'paidStates', [OrderPaymentStates::STATE_PAID, OrderPaymentStates::STATE_PARTIALLY_REFUNDED, OrderPaymentStates::STATE_REFUNDED])
-            ->setParameter($prefix . 'today', self::day($today), 'date_immutable')
+            ->setParameter($prefix . 'today', $this->day($today), 'date_immutable')
         ;
 
         return $queryBuilder
@@ -204,14 +204,14 @@ class OrderPaymentTermsRepository extends EntityRepository implements OrderPayme
         ;
     }
 
-    private static function day(\DateTimeInterface $today): \DateTimeImmutable
+    private function day(\DateTimeInterface $today): \DateTimeImmutable
     {
         return \DateTimeImmutable::createFromInterface($today)->setTime(0, 0);
     }
 
     public function sumAgeingByCurrency(\DateTimeInterface $today): array
     {
-        $day = self::day($today);
+        $day = $this->day($today);
         $queryBuilder = $this->createQueryBuilder('t');
         $queryBuilder
             ->select('t.currencyCode AS currencyCode')

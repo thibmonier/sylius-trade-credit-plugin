@@ -44,13 +44,13 @@ final class PaymentCsvReader
                 if ([null] === $row || [] === array_filter($row, static fn (?string $value): bool => '' !== trim((string) $value))) {
                     continue;
                 }
-                $orderNumber = ltrim(trim((string) ($row[$orderColumn] ?? '')), '#');
-                $amount = $this->amount((string) ($row[$amountColumn] ?? ''));
-                $currency = false === $currencyColumn ? '' : strtoupper(trim((string) ($row[$currencyColumn] ?? '')));
+                $orderNumber = ltrim(trim($row[$orderColumn] ?? ''), '#');
+                $amount = $this->amount($row[$amountColumn] ?? '');
+                $currency = false === $currencyColumn ? '' : strtoupper(trim($row[$currencyColumn] ?? ''));
                 if ('' === $orderNumber) {
                     $errors[$lineNumber] = 'missing order number';
                 } elseif (null === $amount) {
-                    $errors[$lineNumber] = sprintf('invalid amount "%s"', (string) ($row[$amountColumn] ?? ''));
+                    $errors[$lineNumber] = sprintf('invalid amount "%s"', $row[$amountColumn] ?? '');
                 } else {
                     $lines[] = new PaymentLine($lineNumber, $orderNumber, $amount, '' === $currency ? null : $currency);
                 }

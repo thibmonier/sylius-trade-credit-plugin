@@ -13,9 +13,9 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * Orders paid on account are paid by bank transfer before the due date: no pay page, no
  * payment request (customers cannot complete or refund their own payment).
  */
-final class OnAccountPaymentEntryBlocker implements PaymentEntryBlockerInterface
+final readonly class OnAccountPaymentEntryBlocker implements PaymentEntryBlockerInterface
 {
-    public function __construct(private readonly OrderPaymentTermsRepositoryInterface $termsRepository)
+    public function __construct(private OrderPaymentTermsRepositoryInterface $termsRepository)
     {
     }
 
@@ -27,8 +27,8 @@ final class OnAccountPaymentEntryBlocker implements PaymentEntryBlockerInterface
 
         $terms = $this->termsRepository->findReservedForOrder($order);
 
-        return null === $terms ? null : new PaymentEntryBlock('tmonier_trade_credit.payment_entry.on_account', [
+        return $terms instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface ? new PaymentEntryBlock('tmonier_trade_credit.payment_entry.on_account', [
             '%due_date%' => $terms->getDueDate()->format('Y-m-d'),
-        ]);
+        ]) : null;
     }
 }

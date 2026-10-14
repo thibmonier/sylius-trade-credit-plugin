@@ -17,14 +17,14 @@ use Tmonier\SyliusTradeCreditPlugin\Payment\OpenItemSettler;
 use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterface;
 
 /** "Mark as paid" on an open item (bank transfer received), see `OpenItemSettler`. */
-final class MarkAsPaidController
+final readonly class MarkAsPaidController
 {
     public function __construct(
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly OpenItemSettler $settler,
-        private readonly EntityManagerInterface $entityManager,
-        private readonly CsrfTokenManagerInterface $csrfTokenManager,
-        private readonly UrlGeneratorInterface $urlGenerator,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private OpenItemSettler $settler,
+        private EntityManagerInterface $entityManager,
+        private CsrfTokenManagerInterface $csrfTokenManager,
+        private UrlGeneratorInterface $urlGenerator,
     ) {
     }
 

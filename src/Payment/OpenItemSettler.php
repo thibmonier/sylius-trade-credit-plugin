@@ -21,13 +21,13 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * In one transaction, the payment row locked and read again first: concurrent settlements (Mark
  * as paid, payments import) complete it once; the transition is flushed here.
  */
-final class OpenItemSettler
+final readonly class OpenItemSettler
 {
     public function __construct(
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly StateMachineInterface $stateMachine,
-        private readonly ClockInterface $clock,
-        private readonly EntityManagerInterface $entityManager,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private StateMachineInterface $stateMachine,
+        private ClockInterface $clock,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -45,25 +45,25 @@ final class OpenItemSettler
 
         $payment = $order->getLastPayment(PaymentInterface::STATE_NEW) ?? $order->getLastPayment(PaymentInterface::STATE_PROCESSING);
 
-        return null !== $payment && $this->stateMachine->can($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE) ? $payment : null;
+        return $payment instanceof \Sylius\Component\Core\Model\PaymentInterface && $this->stateMachine->can($payment, PaymentTransitions::GRAPH, PaymentTransitions::TRANSITION_COMPLETE) ? $payment : null;
     }
 
     public function settle(OrderPaymentTermsInterface $terms): bool
     {
-        if (null === $this->payableBy($terms)) {
+        if (!$this->payableBy($terms) instanceof \Sylius\Component\Core\Model\PaymentInterface) {
             return false;
         }
 
         return $this->entityManager->wrapInTransaction(function () use ($terms): bool {
             // The entities may be stale (another request settled the item meanwhile).
             $payment = $this->payableBy($terms);
-            if (null === $payment) {
+            if (!$payment instanceof \Sylius\Component\Core\Model\PaymentInterface) {
                 return false;
             }
             $this->entityManager->refresh($payment, LockMode::PESSIMISTIC_WRITE);
             $this->entityManager->refresh($terms);
             $payment = $this->payableBy($terms);
-            if (null === $payment) {
+            if (!$payment instanceof \Sylius\Component\Core\Model\PaymentInterface) {
                 return false;
             }
 

@@ -11,11 +11,11 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Repository\TradeCreditAccountRepositoryInterface;
 
 /** Account of the owner of an order or customer (order-hold owner resolver: the customer by default). */
-final class TradeCreditAccountProvider
+final readonly class TradeCreditAccountProvider
 {
     public function __construct(
-        private readonly AccountOwnerResolverInterface $accountOwnerResolver,
-        private readonly TradeCreditAccountRepositoryInterface $accountRepository,
+        private AccountOwnerResolverInterface $accountOwnerResolver,
+        private TradeCreditAccountRepositoryInterface $accountRepository,
     ) {
     }
 
@@ -23,13 +23,13 @@ final class TradeCreditAccountProvider
     {
         $owner = $this->accountOwnerResolver->resolveForOrder($order);
 
-        return null === $owner ? null : $this->accountRepository->findOneByOwner($owner->getType(), $owner->getIdentifier());
+        return $owner instanceof \Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner ? $this->accountRepository->findOneByOwner($owner->getType(), $owner->getIdentifier()) : null;
     }
 
     public function forCustomer(CustomerInterface $customer): ?TradeCreditAccountInterface
     {
         $owner = $this->accountOwnerResolver->resolveForCustomer($customer);
 
-        return null === $owner ? null : $this->accountRepository->findOneByOwner($owner->getType(), $owner->getIdentifier());
+        return $owner instanceof \Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner ? $this->accountRepository->findOneByOwner($owner->getType(), $owner->getIdentifier()) : null;
     }
 }

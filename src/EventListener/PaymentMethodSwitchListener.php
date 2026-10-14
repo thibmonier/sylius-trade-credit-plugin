@@ -24,12 +24,12 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
  * - new payment on account created after a failed or cancelled one: reserve (a refusal is only
  *   logged: the payment then needs another method).
  */
-final class PaymentMethodSwitchListener
+final readonly class PaymentMethodSwitchListener
 {
     public function __construct(
-        private readonly TradeCreditReserver $reserver,
-        private readonly PaymentTermsPolicyProvider $policyProvider,
-        private readonly LoggerInterface $logger,
+        private TradeCreditReserver $reserver,
+        private PaymentTermsPolicyProvider $policyProvider,
+        private LoggerInterface $logger,
     ) {
     }
 

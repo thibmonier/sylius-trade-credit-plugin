@@ -130,7 +130,7 @@ final class ReminderTest extends KernelTestCase
 
         self::assertSame(['sent'], $this->statuses($this->sender()->send(false), $order));
 
-        $messages = array_values(array_filter(self::getMailerMessages(), static fn ($message): bool => $message instanceof Email && str_contains((string) $message->getSubject(), (string) $order->getNumber())));
+        $messages = array_values(array_filter(self::getMailerMessages(), static fn (\Symfony\Component\Mime\RawMessage $message): bool => $message instanceof Email && str_contains((string) $message->getSubject(), (string) $order->getNumber())));
         self::assertCount(1, $messages);
         $email = $messages[0];
         self::assertInstanceOf(Email::class, $email);

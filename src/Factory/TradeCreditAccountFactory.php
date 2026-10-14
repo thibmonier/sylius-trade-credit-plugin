@@ -15,7 +15,7 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 /**
  * @implements FactoryInterface<TradeCreditAccountInterface>
  */
-final class TradeCreditAccountFactory implements FactoryInterface
+final readonly class TradeCreditAccountFactory implements FactoryInterface
 {
     /**
      * @param FactoryInterface<TradeCreditAccountInterface> $decorated
@@ -23,10 +23,10 @@ final class TradeCreditAccountFactory implements FactoryInterface
      * @param RepositoryInterface<ChannelInterface> $channelRepository
      */
     public function __construct(
-        private readonly FactoryInterface $decorated,
-        private readonly AccountOwnerResolverInterface $accountOwnerResolver,
-        private readonly RepositoryInterface $customerRepository,
-        private readonly RepositoryInterface $channelRepository,
+        private FactoryInterface $decorated,
+        private AccountOwnerResolverInterface $accountOwnerResolver,
+        private RepositoryInterface $customerRepository,
+        private RepositoryInterface $channelRepository,
     ) {
     }
 
@@ -46,7 +46,7 @@ final class TradeCreditAccountFactory implements FactoryInterface
     {
         $customer = $this->customerRepository->find($customerId);
         $owner = $customer instanceof CustomerInterface ? $this->accountOwnerResolver->resolveForCustomer($customer) : null;
-        if (null === $owner) {
+        if (!$owner instanceof \Tmonier\SyliusOrderHoldPlugin\AccountOwner\AccountOwner) {
             throw new NotFoundHttpException('Customer not found.');
         }
 

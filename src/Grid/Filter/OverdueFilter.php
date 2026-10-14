@@ -16,11 +16,11 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * Open items grid: "overdue" = still reserved and due before today, or an order that left
  * payment on account and is unpaid after its due date (or the opposite).
  */
-final class OverdueFilter implements FilterInterface
+final readonly class OverdueFilter implements FilterInterface
 {
     public function __construct(
-        private readonly ClockInterface $clock,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
+        private ClockInterface $clock,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
     ) {
     }
 

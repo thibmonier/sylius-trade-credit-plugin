@@ -106,7 +106,7 @@ final class TradeCreditFixture extends AbstractFixture
 
         $old = $this->order($channel, $customer, $method);
         $this->order($channel, $customer, $method);
-        if (null !== $old) {
+        if ($old instanceof \Sylius\Component\Core\Model\OrderInterface) {
             // Overdue demo item: placed 50 days ago, due 20 days ago.
             $old->setCheckoutCompletedAt(new \DateTime('-50 days'));
             $this->entityManager->flush();

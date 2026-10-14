@@ -18,22 +18,22 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * position when there is one), open items and their ageing. Invoice PDF links are added when
  * sylius/invoicing-plugin is installed and enabled.
  */
-final class StatementBuilder
+final readonly class StatementBuilder
 {
     public function __construct(
-        private readonly TradeCreditAccountProvider $accountProvider,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly ClockInterface $clock,
-        private readonly UrlGeneratorInterface $urlGenerator,
-        private readonly CreditPositionResolver $positionResolver,
-        private readonly ?object $invoiceRepository = null,
+        private TradeCreditAccountProvider $accountProvider,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private ClockInterface $clock,
+        private UrlGeneratorInterface $urlGenerator,
+        private CreditPositionResolver $positionResolver,
+        private ?object $invoiceRepository = null,
     ) {
     }
 
     public function forCustomer(CustomerInterface $customer): ?Statement
     {
         $account = $this->accountProvider->forCustomer($customer);
-        if (null === $account) {
+        if (!$account instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface) {
             return null;
         }
 

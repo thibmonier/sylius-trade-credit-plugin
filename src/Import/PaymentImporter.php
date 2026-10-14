@@ -18,14 +18,14 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
  * line is settled. Idempotent: an order already paid is reported and skipped, never settled
  * twice, so the same file can be imported again.
  */
-final class PaymentImporter
+final readonly class PaymentImporter
 {
     /** @param OrderRepositoryInterface<OrderInterface> $orderRepository */
     public function __construct(
-        private readonly OrderRepositoryInterface $orderRepository,
-        private readonly OrderPaymentTermsRepositoryInterface $termsRepository,
-        private readonly OpenItemSettler $settler,
-        private readonly EntityManagerInterface $entityManager,
+        private OrderRepositoryInterface $orderRepository,
+        private OrderPaymentTermsRepositoryInterface $termsRepository,
+        private OpenItemSettler $settler,
+        private EntityManagerInterface $entityManager,
     ) {
     }
 
@@ -88,7 +88,7 @@ final class PaymentImporter
         }
 
         $terms = $this->termsRepository->findReservedForOrder($order) ?? $this->termsRepository->findLastForOrder($order);
-        if (null === $terms || null === $this->settler->payableBy($terms)) {
+        if (!$terms instanceof \Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface || !$this->settler->payableBy($terms) instanceof \Sylius\Component\Core\Model\PaymentInterface) {
             return [PaymentImportResult::ERROR, 'not an open item', null];
         }
         if (null !== $line->currencyCode && $line->currencyCode !== $terms->getCurrencyCode()) {

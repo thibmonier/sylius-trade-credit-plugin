@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Tmonier\SyliusTradeCreditPlugin\Api;
 
 /** Shop API: trade credit statement of the signed-in customer (amounts in minor units). */
-final class TradeCreditStatementView
+final readonly class TradeCreditStatementView
 {
     /**
      * `availableAmount` is never negative (an account allowed to exceed its limit shows 0);
@@ -17,17 +17,17 @@ final class TradeCreditStatementView
      * @param array{current: int, days_1_30: int, days_31_60: int, days_61_90: int, days_over_90: int} $ageing
      */
     public function __construct(
-        public readonly string $id,
-        public readonly string $currencyCode,
-        public readonly int $creditLimit,
-        public readonly int $committedAmount,
-        public readonly int $availableAmount,
-        public readonly int $overdueAmount,
-        public readonly bool $creditHold,
-        public readonly bool $enabled,
-        public readonly array $openItems,
-        public readonly int $externalCommittedAmount = 0,
-        public readonly array $ageing = ['current' => 0, 'days_1_30' => 0, 'days_31_60' => 0, 'days_61_90' => 0, 'days_over_90' => 0],
+        public string $id,
+        public string $currencyCode,
+        public int $creditLimit,
+        public int $committedAmount,
+        public int $availableAmount,
+        public int $overdueAmount,
+        public bool $creditHold,
+        public bool $enabled,
+        public array $openItems,
+        public int $externalCommittedAmount = 0,
+        public array $ageing = ['current' => 0, 'days_1_30' => 0, 'days_31_60' => 0, 'days_61_90' => 0, 'days_over_90' => 0],
     ) {
     }
 }

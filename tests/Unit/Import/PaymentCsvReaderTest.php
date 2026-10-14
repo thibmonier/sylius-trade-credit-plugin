@@ -27,7 +27,7 @@ final class PaymentCsvReaderTest extends TestCase
         self::assertSame([], $read['errors']);
         self::assertEquals([
             new PaymentLine(2, '000000021', 1312, 'EUR'),
-            new PaymentLine(3, '000000022', 123450, null),
+            new PaymentLine(3, '000000022', 123450),
         ], $read['lines']);
     }
 

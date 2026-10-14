@@ -16,12 +16,12 @@ use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
  * another method) becomes a regular unpaid order: the unpaid-orders expiration period then runs
  * from that release, not from the checkout completed weeks ago.
  */
-final class LostReservationCancellationExclusion implements UnpaidOrderCancellationExclusionInterface
+final readonly class LostReservationCancellationExclusion implements UnpaidOrderCancellationExclusionInterface
 {
     /** @param class-string<OrderPaymentTermsInterface> $termsClass */
     public function __construct(
-        private readonly EntityManagerInterface $entityManager,
-        private readonly string $termsClass,
+        private EntityManagerInterface $entityManager,
+        private string $termsClass,
     ) {
     }
 
