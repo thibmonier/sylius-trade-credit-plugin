@@ -1,5 +1,7 @@
 # Sylius Trade Credit Plugin
 
+> Français : [README.fr.md](README.fr.md) <!-- vitrine:lang -->
+
 [![Build](https://github.com/thibmonier/sylius-trade-credit-plugin/actions/workflows/build.yaml/badge.svg)](https://github.com/thibmonier/sylius-trade-credit-plugin/actions/workflows/build.yaml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -274,6 +276,14 @@ vendor/bin/ecs check
 ```
 
 See [SPEC.md](SPEC.md) for the research and design decisions.
+
+<!-- vitrine:demo-b2b:start -->
+## B2B demo
+
+This plugin is used in the [Sylius B2B demo](https://github.com/thibmonier/sylius-b2b-demo): a Sylius 2.3 shop with fictitious sample data where the B2B plugins work together. The source code, setup and fixtures of the demo are in that repository.
+
+The demo is an example, not a production setup.
+<!-- vitrine:demo-b2b:end -->
 
 ## License
 
