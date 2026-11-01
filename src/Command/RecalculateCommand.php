@@ -11,7 +11,7 @@ use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Console\Style\SymfonyStyle;
 use Tmonier\SyliusTradeCreditPlugin\Repository\TradeCreditAccountRepositoryInterface;
-use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\ReservationMaintenance;
 
 /**
  * Drift detection: the committed amount of each account must equal the sum of its open
@@ -26,7 +26,7 @@ final class RecalculateCommand extends Command
 {
     public function __construct(
         private readonly TradeCreditAccountRepositoryInterface $accountRepository,
-        private readonly TradeCreditReserver $reserver,
+        private readonly ReservationMaintenance $maintenance,
     ) {
         parent::__construct();
     }
@@ -41,18 +41,18 @@ final class RecalculateCommand extends Command
         $io = new SymfonyStyle($input, $output);
         $apply = (bool) $input->getOption('apply');
 
-        $stale = $this->reserver->staleReservations($apply);
+        $stale = $this->maintenance->staleReservations($apply);
         if ([] !== $stale) {
             $io->warning(sprintf('%s reservation(s) of orders that are not placed (or cancelled): %s', $apply ? 'Released' : 'Found', implode(', ', $stale)));
         }
-        $mismatched = $this->reserver->mismatchedReservations($apply);
+        $mismatched = $this->maintenance->mismatchedReservations($apply);
         if ([] !== $mismatched) {
             $io->warning(sprintf('%s reservation(s) made for another method than the payment of the order: %s', $apply ? 'Reserved again or released' : 'Found', implode(', ', $mismatched)));
         }
 
         $rows = [];
         foreach ($this->accountRepository->findAll() as $account) {
-            $drift = $this->reserver->recalculate($account, $apply);
+            $drift = $this->maintenance->recalculate($account, $apply);
             if (null !== $drift) {
                 $rows[] = [(string) $account->getId(), sprintf('%s:%s', (string) $account->getOwnerType(), (string) $account->getOwnerIdentifier()), $drift['committed'], $drift['expected']];
             }

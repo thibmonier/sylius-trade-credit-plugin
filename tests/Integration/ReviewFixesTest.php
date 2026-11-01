@@ -20,6 +20,8 @@ use Tmonier\SyliusOrderHoldPlugin\PaymentMethod\PaymentMethodEligibilityCheckerI
 use Tmonier\SyliusTradeCreditPlugin\Entity\OrderPaymentTermsInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\PaymentTermsPolicyInterface;
 use Tmonier\SyliusTradeCreditPlugin\Exception\TradeCreditReservationException;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\ReservationMaintenance;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\ReservationStore;
 use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 use Tmonier\SyliusTradeCreditPlugin\Statement\StatementBuilder;
 
@@ -245,13 +247,15 @@ final class ReviewFixesTest extends KernelTestCase
         $account = $this->account($customer);
         $order = $this->order('completed', $method, $customer);
         $reserver = $this->reserver();
+        $store = $this->service(ReservationStore::class);
+        self::assertInstanceOf(ReservationStore::class, $store);
         $connection = $this->connection();
-        $reservedRow = (new \ReflectionMethod($reserver, 'reservedRow'))->invoke($reserver, $connection, $order->getId());
+        $reservedRow = $store->reservedRow($connection, $order->getId());
         self::assertIsArray($reservedRow);
 
         self::assertTrue($reserver->close($order, OrderPaymentTermsInterface::STATE_RELEASED, TradeCreditReserver::REASON_ORDER_CANCELLED));
         // A concurrent request that read the row before the first release.
-        $second = (new \ReflectionMethod($reserver, 'closeRow'))->invoke($reserver, $connection, $reservedRow, $order->getId(), OrderPaymentTermsInterface::STATE_SETTLED, TradeCreditReserver::REASON_PAID, new \DateTimeImmutable());
+        $second = $store->closeRow($connection, $reservedRow, $order->getId(), OrderPaymentTermsInterface::STATE_SETTLED, TradeCreditReserver::REASON_PAID, new \DateTimeImmutable());
 
         self::assertFalse($second);
         self::assertSame(0, $this->committed($account));
@@ -266,9 +270,11 @@ final class ReviewFixesTest extends KernelTestCase
         $order = $this->order('completed', $method, $customer);
         $this->connection()->executeStatement('UPDATE tmonier_trade_credit_account SET committed_amount = 1 WHERE id = ?', [$account->getId()]);
 
-        self::assertSame(['committed' => 1, 'expected' => $order->getTotal()], $this->reserver()->recalculate($account, true));
+        $maintenance = $this->service(ReservationMaintenance::class);
+        self::assertInstanceOf(ReservationMaintenance::class, $maintenance);
+        self::assertSame(['committed' => 1, 'expected' => $order->getTotal()], $maintenance->recalculate($account, true));
         self::assertSame($order->getTotal(), $this->committed($account));
-        self::assertNull($this->reserver()->recalculate($account, false));
+        self::assertNull($maintenance->recalculate($account, false));
     }
 
     public function testAnOrderThatLostItsReservationIsNotCancelledRightAway(): void
