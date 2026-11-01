@@ -43,6 +43,10 @@ use Tmonier\SyliusTradeCreditPlugin\Repository\OrderPaymentTermsRepositoryInterf
 use Tmonier\SyliusTradeCreditPlugin\Repository\PaymentTermsPolicyRepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Repository\TradeCreditAccountRepositoryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Repository\TradeCreditLedgerEntryRepositoryInterface;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\PaymentTermsResolver;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\ReservationMaintenance;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\ReservationStore;
+use Tmonier\SyliusTradeCreditPlugin\Reservation\ReservationValidator;
 use Tmonier\SyliusTradeCreditPlugin\Reservation\TradeCreditReserver;
 use Tmonier\SyliusTradeCreditPlugin\Statement\StatementBuilder;
 use Tmonier\SyliusTradeCreditPlugin\Terms\LegalTermsChecker;
@@ -112,7 +116,18 @@ return static function (ContainerConfigurator $container): void {
     $services->alias(CreditPositionResolver::class, 'tmonier_trade_credit.resolver.credit_position');
 
     $services
-        ->set('tmonier_trade_credit.reserver', TradeCreditReserver::class)
+        ->set('tmonier_trade_credit.reservation.store', ReservationStore::class)
+        ->args([
+            service('doctrine.orm.entity_manager'),
+            param('tmonier_trade_credit.model.account.class'),
+            param('tmonier_trade_credit.model.order_payment_terms.class'),
+            param('tmonier_trade_credit.model.ledger_entry.class'),
+        ])
+    ;
+    $services->alias(ReservationStore::class, 'tmonier_trade_credit.reservation.store');
+
+    $services
+        ->set('tmonier_trade_credit.reservation.validator', ReservationValidator::class)
         ->args([
             service('doctrine.orm.entity_manager'),
             service('tmonier_trade_credit.provider.account'),
@@ -121,14 +136,41 @@ return static function (ContainerConfigurator $container): void {
             service('tmonier_trade_credit.checker.order_owner'),
             service('tmonier_trade_credit.resolver.credit_position'),
             service('clock'),
+        ])
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.reservation.terms_resolver', PaymentTermsResolver::class)
+        ->args([service('tmonier_trade_credit.reservation.store')])
+    ;
+
+    $services
+        ->set('tmonier_trade_credit.reserver', TradeCreditReserver::class)
+        ->args([
+            service('tmonier_trade_credit.reservation.store'),
+            service('tmonier_trade_credit.reservation.validator'),
+            service('tmonier_trade_credit.reservation.terms_resolver'),
+            service('tmonier_trade_credit.repository.order_payment_terms'),
+            service('clock'),
             service('logger'),
-            param('tmonier_trade_credit.model.account.class'),
-            param('tmonier_trade_credit.model.order_payment_terms.class'),
-            param('tmonier_trade_credit.model.ledger_entry.class'),
         ])
         ->tag('monolog.logger', ['channel' => 'tmonier_trade_credit'])
     ;
     $services->alias(TradeCreditReserver::class, 'tmonier_trade_credit.reserver');
+
+    $services
+        ->set('tmonier_trade_credit.reservation.maintenance', ReservationMaintenance::class)
+        ->args([
+            service('tmonier_trade_credit.reservation.store'),
+            service('tmonier_trade_credit.reserver'),
+            service('doctrine.orm.entity_manager'),
+            service('tmonier_trade_credit.provider.payment_terms_policy'),
+            service('clock'),
+            service('logger'),
+        ])
+        ->tag('monolog.logger', ['channel' => 'tmonier_trade_credit'])
+    ;
+    $services->alias(ReservationMaintenance::class, 'tmonier_trade_credit.reservation.maintenance');
 
     // order-hold extension points
 
@@ -381,7 +423,7 @@ return static function (ContainerConfigurator $container): void {
         ->set('tmonier_trade_credit.command.recalculate', RecalculateCommand::class)
         ->args([
             service('tmonier_trade_credit.repository.account'),
-            service('tmonier_trade_credit.reserver'),
+            service('tmonier_trade_credit.reservation.maintenance'),
         ])
         ->tag('console.command')
     ;
