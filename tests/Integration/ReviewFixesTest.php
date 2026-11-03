@@ -146,14 +146,16 @@ final class ReviewFixesTest extends KernelTestCase
         $customer = $this->customer();
         $this->account($customer);
         $order = $this->order('completed', $method, $customer);
-        $this->connection()->executeStatement('UPDATE tmonier_trade_credit_order_terms SET due_date = ?, net_days = 30 WHERE order_id = ?', ['2026-11-01', $order->getId()]);
+        // A due date in the future: a past one makes the account overdue, which blocks the re-reservation.
+        $dueDate = (new \DateTimeImmutable('+30 days'))->format('Y-m-d');
+        $this->connection()->executeStatement('UPDATE tmonier_trade_credit_order_terms SET due_date = ?, net_days = 30 WHERE order_id = ?', [$dueDate, $order->getId()]);
         $payment = $order->getLastPayment(PaymentInterface::STATE_NEW);
         self::assertNotNull($payment);
 
         $this->applyPayment($payment, PaymentTransitions::TRANSITION_FAIL);
 
         self::assertSame([OrderPaymentTermsInterface::STATE_RELEASED, OrderPaymentTermsInterface::STATE_RESERVED], $this->termsStates($order));
-        self::assertSame('2026-11-01', $this->termsRepository()->findReservedForOrder($order)?->getDueDate()->format('Y-m-d'));
+        self::assertSame($dueDate, $this->termsRepository()->findReservedForOrder($order)?->getDueDate()->format('Y-m-d'));
     }
 
     public function testSwitchingBetweenTwoMethodsOnAccountTakesTheNewTermsFromTheSameStart(): void
