@@ -20,7 +20,7 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditLedgerEntryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Exception\TradeCreditReservationException;
 
-final readonly class ReservationMaintenance
+final readonly class ReservationMaintenance implements StaleReservationFinderInterface
 {
     public function __construct(
         private ReservationStore $store,
@@ -38,7 +38,7 @@ final readonly class ReservationMaintenance
      *
      * @return list<string>
      */
-    public function staleReservations(bool $apply): array
+    public function staleReservations(bool $apply, ?int $limit = null): array
     {
         /** @var list<array{order_id: int|string, number: string|null}> $rows */
         $rows = $this->store->connection()->fetchAllAssociative(

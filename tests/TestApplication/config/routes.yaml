@@ -1,2 +1,5 @@
 tmonier_sylius_trade_credit:
     resource: "@TmonierSyliusTradeCreditPlugin/config/routes.yaml"
+
+tmonier_sylius_platform_health:
+    resource: "@TmonierSyliusPlatformHealthPlugin/config/routes.yaml"
