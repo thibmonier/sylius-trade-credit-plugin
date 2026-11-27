@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+
+- Health probe `trade_credit.stale_reservations` for the [platform health plugin](https://github.com/thibmonier/sylius-platform-health-plugin):
+  warning when a reservation older than an hour stays open on an order that is not placed or was cancelled. Read-only (it
+  never releases). The health plugin is only suggested (`suggest`), never required: the probe is loaded only when it is installed.
+- `ReservationMaintenance::staleReservations()` takes an optional `$limit`, and implements the new
+  `StaleReservationFinderInterface` that the probe depends on.
+
 ## 1.1.0 (2026-10-12)
 
 ### Added
