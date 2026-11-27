@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'Für keine nicht aufgegebene Bestellung ist Kredit reserviert.'
+            found: '%count% Reservierung(en) seit über einer Stunde für eine nicht aufgegebene oder stornierte Bestellung: Der gebundene Kredit ist zu hoch, führen Sie tmonier:trade-credit:recalculate --apply aus.'
     ui:
         accounts: 'Rechnungskauf-Konten'
         order_payment_terms: 'Offene Posten'

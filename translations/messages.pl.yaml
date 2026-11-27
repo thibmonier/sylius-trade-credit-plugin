@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'Żaden kredyt nie jest zatrzymany dla niezłożonego zamówienia.'
+            found: '%count% rezerwacji zatrzymanych od ponad godziny dla niezłożonego lub anulowanego zamówienia: zaangażowany kredyt jest zbyt wysoki, uruchom tmonier:trade-credit:recalculate --apply.'
     ui:
         accounts: 'Konta kredytu kupieckiego'
         order_payment_terms: 'Otwarte pozycje'

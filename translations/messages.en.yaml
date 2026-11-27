@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'No credit is held for an order that is not placed.'
+            found: '%count% reservation(s) held for more than an hour on an order that is not placed or was cancelled: the committed credit is too high, run tmonier:trade-credit:recalculate --apply.'
     ui:
         accounts: 'Trade credit accounts'
         order_payment_terms: 'Open items'

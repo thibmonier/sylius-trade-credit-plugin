@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'Nessun credito è trattenuto per un ordine non effettuato.'
+            found: '%count% prenotazione/i trattenuta/e da oltre un''ora per un ordine non effettuato o annullato: il credito impegnato è troppo alto, esegua tmonier:trade-credit:recalculate --apply.'
     ui:
         accounts: 'Conti di credito commerciale'
         order_payment_terms: 'Partite aperte'
