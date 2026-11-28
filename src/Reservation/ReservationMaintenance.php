@@ -20,7 +20,7 @@ use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditAccountInterface;
 use Tmonier\SyliusTradeCreditPlugin\Entity\TradeCreditLedgerEntryInterface;
 use Tmonier\SyliusTradeCreditPlugin\Exception\TradeCreditReservationException;
 
-final readonly class ReservationMaintenance
+final readonly class ReservationMaintenance implements StaleReservationFinderInterface
 {
     public function __construct(
         private ReservationStore $store,
@@ -34,18 +34,20 @@ final readonly class ReservationMaintenance
 
     /**
      * Open reservations, older than an hour, whose order is not a placed order (cart left by a
-     * failed save) or was cancelled: order numbers (or ids), released with `$apply`.
+     * failed save) or was cancelled: order numbers (or ids), released with `$apply`. `$limit` bounds
+     * the rows read (the health probe only needs to know whether there are many).
      *
      * @return list<string>
      */
-    public function staleReservations(bool $apply): array
+    public function staleReservations(bool $apply, ?int $limit = null): array
     {
         /** @var list<array{order_id: int|string, number: string|null}> $rows */
         $rows = $this->store->connection()->fetchAllAssociative(
             sprintf(
-                'SELECT t.order_id, o.number FROM %s t INNER JOIN %s o ON o.id = t.order_id WHERE t.state = ? AND t.created_at < ? AND (o.checkout_state <> ? OR o.state = ?)',
+                'SELECT t.order_id, o.number FROM %s t INNER JOIN %s o ON o.id = t.order_id WHERE t.state = ? AND t.created_at < ? AND (o.checkout_state <> ? OR o.state = ?)%s',
                 $this->store->termsTable(),
                 $this->entityManager->getClassMetadata(OrderInterface::class)->getTableName(),
+                null === $limit ? '' : sprintf(' LIMIT %d', max(1, $limit)),
             ),
             [OrderPaymentTermsInterface::STATE_RESERVED, $this->clock->now()->modify('-1 hour'), OrderCheckoutStates::STATE_COMPLETED, OrderInterface::STATE_CANCELLED],
             [1 => Types::DATETIME_IMMUTABLE],

@@ -37,11 +37,13 @@
         "symfony/runtime": "^6.4 || ^7.4 || ^8.0",
         "symfony/web-profiler-bundle": "^6.4 || ^7.4 || ^8.0",
         "symfony/webpack-encore-bundle": "^2.2",
-        "tmonier/sylius-facturx-plugin": "^1.1"
+        "tmonier/sylius-facturx-plugin": "^1.1",
+        "tmonier/sylius-platform-health-plugin": "^0.5"
     },
     "suggest": {
         "tmonier/sylius-facturx-plugin": "Per-order due date (BT-9) and payment terms (BT-20) in Factur-X invoices",
-        "sylius/invoicing-plugin": "Invoice PDF links on the trade credit statement"
+        "sylius/invoicing-plugin": "Invoice PDF links on the trade credit statement",
+        "tmonier/sylius-platform-health-plugin": "Shows the health probe of this plugin (stale reservations) on the administration page and dashboard"
     },
     "config": {
         "sort-packages": true,

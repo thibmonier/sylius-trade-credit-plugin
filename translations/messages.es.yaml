@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'No se retiene ningún crédito para un pedido no realizado.'
+            found: '%count% reserva(s) retenida(s) desde hace más de una hora para un pedido no realizado o cancelado: el crédito comprometido es demasiado alto, ejecute tmonier:trade-credit:recalculate --apply.'
     ui:
         accounts: 'Cuentas de crédito comercial'
         order_payment_terms: 'Partidas abiertas'

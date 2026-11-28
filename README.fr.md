@@ -235,6 +235,19 @@ et sa politique, le client B2B vérifié `b2b@example.com` / `sylius` (entrepris
 Industries », plafond de 5 000,00) avec deux commandes sur compte, dont une en retard, et vérifie les
 utilisateurs de la boutique des fixtures (le canal de démonstration exige un compte vérifié pour se connecter).
 
+## Sondes de santé
+
+Si [`tmonier/sylius-platform-health-plugin`](https://github.com/thibmonier/sylius-platform-health-plugin) (`^0.5`) est installé, le plugin affiche une sonde dans la catégorie **Plugins** de la page de santé, du tableau de bord et de `tmonier:health:check`. Le plugin de santé est seulement suggéré : sans lui, rien n'est chargé et rien ne change.
+
+| Identifiant | Mesure | `ok` | `warning` |
+|---|---|---|---|
+| `trade_credit.stale_reservations` | réservations ouvertes depuis plus d'une heure dont la commande n'est pas passée ou a été annulée (la même liste que `tmonier:trade-credit:recalculate`) : l'encours engagé d'un compte est trop élevé | aucune | au moins une |
+
+- Une réservation de 60 minutes pile n'est pas périmée ; une seconde de plus, elle l'est.
+- **Lecture seule** : la sonde liste les réservations périmées et ne les libère jamais (`tmonier:trade-credit:recalculate --apply` le fait). 501 lignes au plus sont lues, le résumé indique alors « 500+ ».
+- Le résumé donne un nombre : ni numéro de commande, ni client, ni montant. Un résultat qui n'est pas `ok` renvoie vers les comptes de paiement à terme.
+- Une sonde dont la requête échoue répond `unknown` (la cause va au journal, pas à la page).
+
 ## Limitations
 
 - **Une seule devise** par compte (la devise de base du canal) ; pas de paiements partiels : une pièce

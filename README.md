@@ -235,6 +235,19 @@ method and its policy, the verified B2B customer `b2b@example.com` / `sylius` (c
 Industries", 5,000.00 limit) with two orders on account, one of them overdue, and verifies the
 shop users of the fixtures (the demo channel requires a verified account to sign in).
 
+## Health probes
+
+If [`tmonier/sylius-platform-health-plugin`](https://github.com/thibmonier/sylius-platform-health-plugin) (`^0.5`) is installed, the plugin shows one probe in the **Plugins** category of the health page, the dashboard and `tmonier:health:check`. The health plugin is only suggested: without it nothing is loaded and nothing changes.
+
+| Identifier | Measures | `ok` | `warning` |
+|---|---|---|---|
+| `trade_credit.stale_reservations` | open reservations older than one hour whose order is not placed or was cancelled (the same list as `tmonier:trade-credit:recalculate`): the committed credit of an account is too high | none | at least one |
+
+- A reservation of exactly 60 minutes is not stale; one second older it is.
+- **Read-only**: the probe lists the stale reservations and never releases them (`tmonier:trade-credit:recalculate --apply` does). At most 501 rows are read, the summary then reads "500+".
+- The summary gives a count: no order number, no customer, no amount. A non-`ok` result links to the trade credit accounts.
+- A probe whose query fails answers `unknown` (the cause goes to the log, not to the page).
+
 ## Limitations
 
 - **Single currency** per account (the channel base currency); no partial payments: an open

@@ -11,10 +11,22 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Extension\PrependExtensionInterface;
 use Symfony\Component\DependencyInjection\Loader\PhpFileLoader;
 use Tmonier\SyliusFacturXPlugin\PaymentTerms\InvoicePaymentTermsProviderInterface;
+use Tmonier\SyliusPlatformHealthPlugin\Health\HealthCheckInterface;
 
 final class TmonierSyliusTradeCreditExtension extends AbstractResourceExtension implements PrependExtensionInterface
 {
     use PrependDoctrineMigrationsTrait;
+
+    /** @var \Closure(string): bool */
+    private readonly \Closure $interfaceExists;
+
+    /**
+     * @param (\Closure(string): bool)|null $interfaceExists
+     */
+    public function __construct(?\Closure $interfaceExists = null)
+    {
+        $this->interfaceExists = $interfaceExists ?? interface_exists(...);
+    }
 
     public function load(array $configs, ContainerBuilder $container): void
     {
@@ -36,6 +48,11 @@ final class TmonierSyliusTradeCreditExtension extends AbstractResourceExtension 
         // Factur-X (optional): per-order due date (BT-9) and payment terms (BT-20).
         if (interface_exists(InvoicePaymentTermsProviderInterface::class)) {
             $loader->load('services/facturx.php');
+        }
+
+        // HealthCheckInterface::class is only a string here: it does not load the interface, so a shop without the health plugin never hits a fatal error.
+        if (($this->interfaceExists)(HealthCheckInterface::class)) {
+            $loader->load('health_checks.php');
         }
     }
 

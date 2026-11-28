@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'Er wordt geen krediet vastgehouden voor een niet geplaatste bestelling.'
+            found: '%count% reservering(en) langer dan een uur vastgehouden voor een niet geplaatste of geannuleerde bestelling: het vastgelegde krediet is te hoog, voer tmonier:trade-credit:recalculate --apply uit.'
     ui:
         accounts: 'Handelskredietrekeningen'
         order_payment_terms: 'Openstaande posten'

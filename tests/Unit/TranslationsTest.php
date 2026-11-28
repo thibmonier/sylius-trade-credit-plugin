@@ -40,6 +40,15 @@ final class TranslationsTest extends TestCase
         }
     }
 
+    public function testEveryHealthMessageIsTranslated(): void
+    {
+        $messages = $this->flatten($this->parse('messages', 'en'));
+
+        foreach (['stale_reservations.ok', 'stale_reservations.found'] as $key) {
+            self::assertArrayHasKey('tmonier_trade_credit.health.' . $key, $messages);
+        }
+    }
+
     public function testEveryKeyUsedInTheCodeExists(): void
     {
         $known = array_keys($this->flatten($this->parse('messages', 'en')) + $this->flatten($this->parse('flashes', 'en')) + $this->flatten($this->parse('validators', 'en')));

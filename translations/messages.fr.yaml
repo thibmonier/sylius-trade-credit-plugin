@@ -1,4 +1,8 @@
 tmonier_trade_credit:
+    health:
+        stale_reservations:
+            ok: 'Aucun encours n''est retenu pour une commande non passée.'
+            found: '%count% réservation(s) retenue(s) depuis plus d''une heure sur une commande non passée ou annulée : l''encours engagé est trop élevé, lancez tmonier:trade-credit:recalculate --apply.'
     ui:
         accounts: 'Comptes de paiement à terme'
         order_payment_terms: 'Pièces ouvertes'
