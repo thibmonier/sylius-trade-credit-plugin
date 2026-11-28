@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-28
+
 ### Added
 
 - Health probe `trade_credit.stale_reservations` for the [platform health plugin](https://github.com/thibmonier/sylius-platform-health-plugin):
